@@ -7,38 +7,36 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5}
-header{
-background:#111;color:white;padding:15px;
-display:flex;align-items:center;gap:10px;
-}
+header{background:#111;color:white;padding:15px;display:flex;gap:10px}
 
 /* SIDEBAR */
-.menu{
-position:fixed;left:-260px;top:0;width:260px;height:100%;
-background:white;transition:0.3s;z-index:1000;
-}
+.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;background:white;transition:0.3s;z-index:1000;}
 .menu.open{left:0}
-
-.menu-item{
-padding:15px;border-bottom:1px solid #eee;cursor:pointer;
-}
+.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
 
 /* OVERLAY */
-#overlay{
-position:fixed;width:100%;height:100%;
-background:rgba(0,0,0,0.4);display:none;
-}
+#overlay{position:fixed;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none}
 
 /* CONTENT */
 .container{padding:15px}
 
 /* CARD */
 .card{
-background:white;padding:15px;margin:10px 0;
-border-radius:10px;
+background:white;padding:12px;margin:8px 0;
+border-radius:12px;
 display:flex;justify-content:space-between;align-items:center;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
+
+/* STATUS BADGES */
+.badge{
+padding:4px 8px;border-radius:6px;font-size:12px;color:white;
+}
+.pending{background:orange}
+.preparing{background:blue}
+.delivery{background:#16a34a}
+.done{background:gray}
+.rejected{background:red}
 
 /* BUTTON */
 button{
@@ -58,9 +56,8 @@ background:white;padding:20px;border-radius:10px;
 width:90%;max-width:400px;
 }
 
-input{
-width:100%;padding:8px;margin-bottom:10px;
-}
+/* FILTER */
+select,input{padding:8px;margin:5px 0;width:100%}
 </style>
 </head>
 
@@ -97,14 +94,22 @@ Admin Panel
 
 <!-- ORDERS -->
 <div id="ordersSection" style="display:none">
-<h3>Completed / Rejected</h3>
-<input type="date" id="dateFilter" onchange="filterOrders()">
+<h3>Orders</h3>
+
+<select id="filterType" onchange="applyFilter()">
+<option value="today">Today</option>
+<option value="yesterday">Yesterday</option>
+<option value="custom">Custom Date</option>
+</select>
+
+<input type="date" id="dateFilter" style="display:none" onchange="applyFilter()">
+
 <div id="ordersList"></div>
 </div>
 
 </div>
 
-<!-- ORDER MODAL -->
+<!-- MODAL -->
 <div id="orderModal" class="modal">
 <div class="box">
 <h3>Order Details</h3>
@@ -118,11 +123,10 @@ Admin Panel
 <option>rejected</option>
 </select>
 
-<button onclick="updateStatus()">Update Status</button>
+<button onclick="updateStatus()">Update</button>
 </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -131,15 +135,13 @@ Admin Panel
 <script>
 const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
 
-const config={
+firebase.initializeApp({
 apiKey:"AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
 authDomain:"chicken-delivery-app-9e4f6.firebaseapp.com",
 projectId:"chicken-delivery-app-9e4f6",
 messagingSenderId:"471866860980",
 appId:"1:471866860980:web:5ad0bd8cea53f9637ffee1"
-};
-
-firebase.initializeApp(config);
+});
 
 const db=firebase.firestore();
 const auth=firebase.auth();
@@ -149,14 +151,12 @@ const messaging=firebase.messaging();
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
 if(user.email!==ADMIN_EMAIL){
-alert("Not authorized");
-auth.signOut();
+alert("Not authorized");auth.signOut();
 }
 });
 
 function login(){
-const provider=new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider);
+auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 }
 function logout(){auth.signOut();}
 
@@ -165,56 +165,28 @@ function openMenu(){menu.classList.add("open");overlay.style.display="block";}
 function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
 
 /* NAV */
-function showDashboard(){dashboardSection.style.display="block";deliverySection.style.display="none";ordersSection.style.display="none";closeMenu();}
-function showDelivery(){dashboardSection.style.display="none";deliverySection.style.display="block";ordersSection.style.display="none";closeMenu();}
-function showOrders(){dashboardSection.style.display="none";deliverySection.style.display="none";ordersSection.style.display="block";closeMenu();}
+function showDashboard(){dashboardSection.style.display="block";deliverySection.style.display="none";ordersSection.style.display="none";}
+function showDelivery(){dashboardSection.style.display="none";deliverySection.style.display="block";ordersSection.style.display="none";}
+function showOrders(){dashboardSection.style.display="none";deliverySection.style.display="none";ordersSection.style.display="block";applyFilter();}
 
-/* PUSH NOTIFICATIONS */
-Notification.requestPermission().then(permission=>{
-if(permission==="granted"){
-messaging.getToken({
-vapidKey:"BLK2ZeC0XbIEylS90olGsHR6x2xrHKJ6dPXCWCtv5TMHv_2MW-ZcWh6VvQP08YCXek6YfUCCOacZQ-kqFYyoaKg"
-}).then(token=>{
-console.log("FCM TOKEN:",token);
-});
-}
-});
-
-messaging.onMessage(payload=>{
-alert("New Order Received!");
-});
-
-/* ALERT LOOP */
+/* ALERT */
 let alertInterval=null;
-
 function startAlert(){
 if(alertInterval) return;
-
 alertInterval=setInterval(()=>{
-let audio=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-audio.play();
-
-if(navigator.vibrate){
-navigator.vibrate([200,100,200]);
-}
-
+new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
+navigator.vibrate?.([200,100,200]);
 },2000);
 }
-
-function stopAlert(){
-clearInterval(alertInterval);
-alertInterval=null;
-}
+function stopAlert(){clearInterval(alertInterval);alertInterval=null;}
 
 /* DATA */
 let lastOrderTime=null;
 let allOrders=[];
 
 db.collection("orders").orderBy("createdAt","desc").onSnapshot(snap=>{
-
 dashboardList.innerHTML="";
 deliveryList.innerHTML="";
-ordersList.innerHTML="";
 allOrders=[];
 
 snap.forEach(doc=>{
@@ -222,61 +194,86 @@ let o=doc.data();
 o.id=doc.id;
 allOrders.push(o);
 
-/* NEW ORDER ALERT */
+/* ALERT */
 if(o.createdAt){
 let t=o.createdAt.toMillis();
-if(lastOrderTime && t>lastOrderTime){
-startAlert();
+if(lastOrderTime && t>lastOrderTime){startAlert();}
+if(!lastOrderTime || t>lastOrderTime){lastOrderTime=t;}
 }
-if(!lastOrderTime || t>lastOrderTime){
-lastOrderTime=t;
-}
-}
+
+/* STATUS CLASS */
+let cls = o.status==="pending"?"pending":
+o.status==="preparing"?"preparing":
+o.status==="out for delivery"?"delivery":
+o.status==="rejected"?"rejected":"done";
 
 /* CARD */
 let html=`
 <div class="card">
 <div onclick="openOrder('${doc.id}')">
-<b>${doc.id.slice(0,6)}</b><br>${o.status}
+<b>${doc.id.slice(0,6)}</b><br>
+<span class="badge ${cls}">${o.status}</span>
 </div>
-<button class="reject" onclick="reject('${doc.id}')">Reject</button>
-</div>
-`;
+<button class="reject" onclick="reject('${doc.id}')">✖</button>
+</div>`;
 
 /* FILTER */
-if(o.status==="pending" || o.status==="preparing"){
+if(o.status==="pending"||o.status==="preparing"){
 dashboardList.innerHTML+=html;
 }
 else if(o.status==="out for delivery"){
 deliveryList.innerHTML+=html;
 }
-else{
-ordersList.innerHTML+=html;
-}
 
 });
+
+applyFilter();
 });
 
-/* DATE FILTER */
-function filterOrders(){
-let date=dateFilter.value;
+/* FILTER LOGIC */
+function applyFilter(){
 ordersList.innerHTML="";
+
+let type=filterType.value;
+let today=new Date();
+let yesterday=new Date();
+yesterday.setDate(today.getDate()-1);
 
 allOrders.forEach(o=>{
 if(!o.createdAt) return;
 
-let d=o.createdAt.toDate().toISOString().split("T")[0];
+let d=o.createdAt.toDate();
+let show=false;
 
-if(d===date && (o.status==="delivered" || o.status==="rejected")){
+if(type==="today"){
+show=d.toDateString()===today.toDateString();
+}
+else if(type==="yesterday"){
+show=d.toDateString()===yesterday.toDateString();
+}
+else{
+dateFilter.style.display="block";
+let selected=dateFilter.value;
+if(selected){
+show=d.toISOString().split("T")[0]===selected;
+}
+}
+
+/* ONLY completed */
+if(show && (o.status==="delivered"||o.status==="rejected")){
 ordersList.innerHTML+=`
 <div class="card">
-${o.id.slice(0,6)}<br>${o.status}
+${o.id.slice(0,6)} - ${o.status}
 </div>`;
 }
 });
+
+if(type!=="custom"){
+dateFilter.style.display="none";
+}
 }
 
-/* ORDER DETAILS */
+/* ORDER */
 let selectedOrderId=null;
 
 function openOrder(id){
@@ -289,8 +286,7 @@ let o=doc.data();
 orderDetails.innerHTML=`
 <b>User:</b> ${o.userName}<br>
 <b>Items:</b> ${o.items.map(i=>i.name).join(", ")}<br>
-<b>Address:</b> ${o.address}<br>
-<b>Payment:</b> ${o.payment}
+<b>Address:</b> ${o.address}
 `;
 
 statusSelect.value=o.status;
@@ -298,7 +294,6 @@ orderModal.style.display="flex";
 });
 }
 
-/* UPDATE */
 function updateStatus(){
 db.collection("orders").doc(selectedOrderId).update({
 status:statusSelect.value
@@ -306,19 +301,20 @@ status:statusSelect.value
 orderModal.style.display="none";
 }
 
-/* REJECT */
 function reject(id){
-db.collection("orders").doc(id).update({
-status:"rejected"
-});
+db.collection("orders").doc(id).update({status:"rejected"});
 }
 
-/* CLOSE MODAL */
-window.onclick=e=>{
-if(e.target.classList.contains("modal")){
-e.target.style.display="none";
+/* PUSH */
+Notification.requestPermission().then(p=>{
+if(p==="granted"){
+messaging.getToken({
+vapidKey:"BLK2ZeC0XbIEylS90olGsHR6x2xrHKJ6dPXCWCtv5TMHv_2MW-ZcWh6VvQP08YCXek6YfUCCOacZQ-kqFYyoaKg"
+});
 }
-};
+});
+
+messaging.onMessage(()=>alert("New Order Received!"));
 
 /* DOM */
 const menu=document.getElementById("menu");
