@@ -10,15 +10,21 @@ body{margin:0;font-family:Arial;background:#f5f5f5}
 header{background:#111;color:white;padding:15px;display:flex;gap:10px}
 
 /* SIDEBAR */
-.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;
-background:white;transition:0.3s;z-index:1000;}
+.menu{
+position:fixed;left:-260px;top:0;width:260px;height:100%;
+background:white;transition:0.3s;z-index:1000;
+}
 .menu.open{left:0}
 
-.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
-.menu-item:hover{background:#f2f2f2}
+.menu-item{
+padding:15px;border-bottom:1px solid #eee;cursor:pointer;
+}
 
-#overlay{position:fixed;width:100%;height:100%;
-background:rgba(0,0,0,0.4);display:none}
+/* OVERLAY */
+#overlay{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.4);display:none;
+}
 
 /* CONTENT */
 .container{padding:15px}
@@ -30,6 +36,20 @@ border-radius:10px;cursor:pointer;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
+/* INPUT */
+input{
+width:100%;padding:10px;margin:5px 0;
+border-radius:6px;border:1px solid #ccc;
+}
+
+/* BUTTON */
+button{
+padding:8px;border:none;border-radius:6px;
+background:#16a34a;color:white;margin:2px;cursor:pointer;
+}
+.edit{background:orange}
+.delete{background:red}
+
 /* MODAL */
 .modal{
 position:fixed;top:0;left:0;width:100%;height:100%;
@@ -39,12 +59,6 @@ display:none;justify-content:center;align-items:center;
 .box{
 background:white;padding:20px;border-radius:10px;
 width:90%;max-width:400px;
-}
-
-/* BUTTON */
-button{
-padding:10px;border:none;border-radius:6px;
-background:#16a34a;color:white;margin-top:5px;cursor:pointer;
 }
 </style>
 </head>
@@ -58,16 +72,42 @@ Admin Panel
 
 <div id="overlay" onclick="closeMenu()"></div>
 
+<!-- SIDEBAR -->
 <div id="menu" class="menu">
 <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
+<div class="menu-item" onclick="showItems()">🍗 Items</div>
+<div class="menu-item" onclick="showOrders()">📦 Orders</div>
 <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
+
+<!-- DASHBOARD -->
 <div id="dashboardSection">
+<h3>Live Orders</h3>
+<div id="dashboardList"></div>
+</div>
+
+<!-- ITEMS -->
+<div id="itemsSection" style="display:none">
+<h3>Add / Edit Item</h3>
+
+<input id="nameInput" placeholder="Item Name">
+<input id="priceInput" type="number" placeholder="Price">
+<input id="imageInput" placeholder="Image URL">
+
+<button onclick="saveItem()">Save Item</button>
+
+<h3>Items</h3>
+<div id="itemsList"></div>
+</div>
+
+<!-- ORDERS -->
+<div id="ordersSection" style="display:none">
 <h3>Orders</h3>
 <div id="ordersList"></div>
 </div>
+
 </div>
 
 <!-- ORDER MODAL -->
@@ -79,32 +119,18 @@ Admin Panel
 <select id="statusSelect">
 <option>pending</option>
 <option>preparing</option>
+<option>out for delivery</option>
 <option>delivered</option>
 </select>
 
 <button onclick="updateStatus()">Update Status</button>
-<button onclick="openMap()">Track Delivery</button>
 </div>
 </div>
-
-<!-- MAP MODAL -->
-<div id="mapModal" class="modal">
-<div class="box">
-<h3>Live Tracking</h3>
-<div id="map" style="height:300px;border-radius:10px;"></div>
-<button onclick="saveLocation()">Save Location</button>
-</div>
-</div>
-
-<audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-<!-- Google Maps -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLds9mdWrFd1ap158yji-WzxRatQcYFQA"></script>
 
 <script>
 const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
@@ -119,15 +145,15 @@ firebase.initializeApp(config);
 const db=firebase.firestore();
 const auth=firebase.auth();
 
-let lastCount=0;
 let selectedOrderId=null;
-let map, marker;
+let editId=null;
+let watchId=null;
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
 if(user.email!==ADMIN_EMAIL){
-alert("Not authorized"); auth.signOut();
+alert("Not authorized");auth.signOut();
 }
 });
 
@@ -135,35 +161,98 @@ function login(){
 const provider=new firebase.auth.GoogleAuthProvider();
 auth.signInWithPopup(provider);
 }
-
 function logout(){auth.signOut();}
 
 /* MENU */
 function openMenu(){menu.classList.add("open");overlay.style.display="block";}
 function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
 
-/* LOAD ORDERS */
-db.collection("orders").onSnapshot(snap=>{
-ordersList.innerHTML="";
-
-if(lastCount && snap.size>lastCount){
-alertSound.play();
-alert("New Order!");
+/* NAV */
+function showDashboard(){
+dashboardSection.style.display="block";
+itemsSection.style.display="none";
+ordersSection.style.display="none";
+closeMenu();
 }
-lastCount=snap.size;
+function showItems(){
+dashboardSection.style.display="none";
+itemsSection.style.display="block";
+ordersSection.style.display="none";
+closeMenu();
+}
+function showOrders(){
+dashboardSection.style.display="none";
+itemsSection.style.display="none";
+ordersSection.style.display="block";
+closeMenu();
+}
 
+/* ITEMS */
+function saveItem(){
+let name=nameInput.value.trim();
+let price=priceInput.value.trim();
+let image=imageInput.value.trim();
+
+if(!name||!price){alert("Fill all fields");return;}
+
+let data={name,price:Number(price),image};
+
+if(editId){
+db.collection("items").doc(editId).update(data);
+editId=null;
+}else{
+db.collection("items").add(data);
+}
+
+nameInput.value="";
+priceInput.value="";
+imageInput.value="";
+}
+
+db.collection("items").onSnapshot(snap=>{
+itemsList.innerHTML="";
 snap.forEach(doc=>{
-let o=doc.data();
-
-ordersList.innerHTML+=`
-<div class="card" onclick="openOrder('${doc.id}')">
-Order: ${doc.id.slice(0,6)}<br>
-Status: ${o.status||"pending"}
+let i=doc.data();
+itemsList.innerHTML+=`
+<div class="card">
+<b>${i.name}</b> - ₹${i.price}<br>
+<img src="${i.image}" width="100%" onerror="this.src='https://via.placeholder.com/150'"><br>
+<button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
+<button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
 </div>`;
 });
 });
 
-/* OPEN ORDER */
+function editItem(id,n,p,img){
+editId=id;
+nameInput.value=n;
+priceInput.value=p;
+imageInput.value=img;
+window.scrollTo(0,0);
+}
+function deleteItem(id){
+if(confirm("Delete?")) db.collection("items").doc(id).delete();
+}
+
+/* ORDERS */
+db.collection("orders").onSnapshot(snap=>{
+dashboardList.innerHTML="";
+ordersList.innerHTML="";
+
+snap.forEach(doc=>{
+let o=doc.data();
+
+let html=`
+<div class="card" onclick="openOrder('${doc.id}')">
+Order: ${doc.id.slice(0,6)}<br>
+Status: ${o.status||"pending"}
+</div>`;
+
+dashboardList.innerHTML+=html;
+ordersList.innerHTML+=html;
+});
+});
+
 function openOrder(id){
 selectedOrderId=id;
 
@@ -181,66 +270,57 @@ orderModal.style.display="flex";
 });
 }
 
+/* GPS TRACKING */
+function startTracking(orderId){
+if(!navigator.geolocation){alert("GPS not supported");return;}
+
+watchId=navigator.geolocation.watchPosition(pos=>{
+db.collection("orders").doc(orderId).update({
+location:{
+lat:pos.coords.latitude,
+lng:pos.coords.longitude
+}
+});
+});
+}
+
+function stopTracking(){
+if(watchId){
+navigator.geolocation.clearWatch(watchId);
+watchId=null;
+}
+}
+
 /* UPDATE STATUS */
 function updateStatus(){
-db.collection("orders").doc(selectedOrderId).update({
-status:statusSelect.value
-});
-orderModal.style.display="none";
-}
-
-/* OPEN MAP */
-function openMap(){
-mapModal.style.display="flex";
-
-setTimeout(()=>{
-map = new google.maps.Map(document.getElementById("map"), {
-center:{lat:17.3850,lng:78.4867},
-zoom:15
-});
-
-marker = new google.maps.Marker({
-position:{lat:17.3850,lng:78.4867},
-map:map,
-draggable:true
-});
-},200);
-}
-
-/* SAVE LOCATION */
-function saveLocation(){
-let pos=marker.getPosition();
+let status=statusSelect.value;
 
 db.collection("orders").doc(selectedOrderId).update({
-location:{
-lat:pos.lat(),
-lng:pos.lng()
-}
+status:status
 });
 
-alert("Location Updated");
-mapModal.style.display="none";
+if(status==="out for delivery"){
+startTracking(selectedOrderId);
 }
 
-/* STOP TRACKING WHEN DELIVERED */
-db.collection("orders").onSnapshot(snap=>{
-snap.forEach(doc=>{
-let o=doc.data();
-if(o.status==="delivered"){
-db.collection("orders").doc(doc.id).update({
+if(status==="delivered"){
+stopTracking();
+db.collection("orders").doc(selectedOrderId).update({
 location:null
 });
 }
-});
-});
 
-/* CLOSE MODALS */
+orderModal.style.display="none";
+}
+
+/* CLOSE MODAL */
 window.onclick=e=>{
 if(e.target.classList.contains("modal")){
 e.target.style.display="none";
 }
 };
 
+/* DOM */
 const menu=document.getElementById("menu");
 const overlay=document.getElementById("overlay");
 </script>
