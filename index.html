@@ -7,56 +7,42 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5}
-header{background:#111;color:white;padding:15px;display:flex;gap:10px}
+header{background:#111;color:white;padding:15px}
 
-/* SIDEBAR */
-.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;background:white;transition:0.3s;z-index:1000;}
+.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;background:white;transition:.3s}
 .menu.open{left:0}
 .menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
 
-/* OVERLAY */
 #overlay{position:fixed;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none}
 
-/* CONTENT */
 .container{padding:15px}
 
-/* CARD */
 .card{
 background:white;padding:12px;margin:8px 0;
 border-radius:12px;
-display:flex;justify-content:space-between;align-items:center;
+display:flex;justify-content:space-between;
+align-items:center;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* STATUS BADGES */
-.badge{
-padding:4px 8px;border-radius:6px;font-size:12px;color:white;
-}
+.badge{padding:4px 8px;border-radius:6px;color:white}
 .pending{background:orange}
 .preparing{background:blue}
 .delivery{background:#16a34a}
 .done{background:gray}
 .rejected{background:red}
 
-/* BUTTON */
-button{
-padding:6px 10px;border:none;border-radius:6px;
-background:#16a34a;color:white;cursor:pointer;
-}
+button{padding:6px 10px;border:none;border-radius:6px;background:#16a34a;color:white}
 .reject{background:red}
 
-/* MODAL */
 .modal{
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.5);
 display:none;justify-content:center;align-items:center;
 }
-.box{
-background:white;padding:20px;border-radius:10px;
-width:90%;max-width:400px;
-}
 
-/* FILTER */
+.box{background:white;padding:20px;border-radius:10px;width:90%}
+
 select,input{padding:8px;margin:5px 0;width:100%}
 </style>
 </head>
@@ -64,42 +50,37 @@ select,input{padding:8px;margin:5px 0;width:100%}
 <body>
 
 <header>
-<span onclick="openMenu()">☰</span>
-Admin Panel
+<span onclick="openMenu()">☰</span> Admin Panel
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
 
-<!-- SIDEBAR -->
 <div id="menu" class="menu">
-<div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
-<div class="menu-item" onclick="showDelivery()">🚚 Delivery</div>
-<div class="menu-item" onclick="showOrders()">📦 Orders</div>
-<div class="menu-item" onclick="logout()">🚪 Logout</div>
+<div class="menu-item" onclick="showDashboard()">Dashboard</div>
+<div class="menu-item" onclick="showDelivery()">Delivery</div>
+<div class="menu-item" onclick="showOrders()">Orders</div>
+<div class="menu-item" onclick="logout()">Logout</div>
 </div>
 
 <div class="container">
 
-<!-- DASHBOARD -->
 <div id="dashboardSection">
 <h3>Active Orders</h3>
 <div id="dashboardList"></div>
 </div>
 
-<!-- DELIVERY -->
 <div id="deliverySection" style="display:none">
 <h3>Out for Delivery</h3>
 <div id="deliveryList"></div>
 </div>
 
-<!-- ORDERS -->
 <div id="ordersSection" style="display:none">
-<h3>Orders</h3>
+<h3>Completed Orders</h3>
 
 <select id="filterType" onchange="applyFilter()">
 <option value="today">Today</option>
 <option value="yesterday">Yesterday</option>
-<option value="custom">Custom Date</option>
+<option value="custom">Custom</option>
 </select>
 
 <input type="date" id="dateFilter" style="display:none" onchange="applyFilter()">
@@ -109,7 +90,6 @@ Admin Panel
 
 </div>
 
-<!-- MODAL -->
 <div id="orderModal" class="modal">
 <div class="box">
 <h3>Order Details</h3>
@@ -130,7 +110,6 @@ Admin Panel
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
 const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
@@ -138,14 +117,11 @@ const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
 firebase.initializeApp({
 apiKey:"AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
 authDomain:"chicken-delivery-app-9e4f6.firebaseapp.com",
-projectId:"chicken-delivery-app-9e4f6",
-messagingSenderId:"471866860980",
-appId:"1:471866860980:web:5ad0bd8cea53f9637ffee1"
+projectId:"chicken-delivery-app-9e4f6"
 });
 
 const db=firebase.firestore();
 const auth=firebase.auth();
-const messaging=firebase.messaging();
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
@@ -165,9 +141,22 @@ function openMenu(){menu.classList.add("open");overlay.style.display="block";}
 function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
 
 /* NAV */
-function showDashboard(){dashboardSection.style.display="block";deliverySection.style.display="none";ordersSection.style.display="none";}
-function showDelivery(){dashboardSection.style.display="none";deliverySection.style.display="block";ordersSection.style.display="none";}
-function showOrders(){dashboardSection.style.display="none";deliverySection.style.display="none";ordersSection.style.display="block";applyFilter();}
+function showDashboard(){
+dashboardSection.style.display="block";
+deliverySection.style.display="none";
+ordersSection.style.display="none";
+}
+function showDelivery(){
+dashboardSection.style.display="none";
+deliverySection.style.display="block";
+ordersSection.style.display="none";
+}
+function showOrders(){
+dashboardSection.style.display="none";
+deliverySection.style.display="none";
+ordersSection.style.display="block";
+applyFilter();
+}
 
 /* ALERT */
 let alertInterval=null;
@@ -178,59 +167,68 @@ new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
 navigator.vibrate?.([200,100,200]);
 },2000);
 }
-function stopAlert(){clearInterval(alertInterval);alertInterval=null;}
+function stopAlert(){
+clearInterval(alertInterval);
+alertInterval=null;
+}
 
 /* DATA */
 let lastOrderTime=null;
 let allOrders=[];
 
-db.collection("orders").orderBy("createdAt","desc").onSnapshot(snap=>{
+db.collection("orders").onSnapshot(snap=>{
 dashboardList.innerHTML="";
 deliveryList.innerHTML="";
 allOrders=[];
 
 snap.forEach(doc=>{
-let o=doc.data();
+let o=doc.data() || {};
 o.id=doc.id;
-allOrders.push(o);
+
+/* SAFE TIME */
+let t = o.createdAt?.toMillis ? 
+        o.createdAt.toMillis() : 
+        o.createdAt || Date.now();
 
 /* ALERT */
-if(o.createdAt){
-let t=o.createdAt.toMillis();
 if(lastOrderTime && t>lastOrderTime){startAlert();}
 if(!lastOrderTime || t>lastOrderTime){lastOrderTime=t;}
-}
 
-/* STATUS CLASS */
-let cls = o.status==="pending"?"pending":
-o.status==="preparing"?"preparing":
-o.status==="out for delivery"?"delivery":
-o.status==="rejected"?"rejected":"done";
+/* SAFE STATUS */
+let status=o.status || "pending";
+
+/* CLASS */
+let cls =
+status==="pending"?"pending":
+status==="preparing"?"preparing":
+status==="out for delivery"?"delivery":
+status==="rejected"?"rejected":"done";
 
 /* CARD */
 let html=`
 <div class="card">
 <div onclick="openOrder('${doc.id}')">
 <b>${doc.id.slice(0,6)}</b><br>
-<span class="badge ${cls}">${o.status}</span>
+<span class="badge ${cls}">${status}</span>
 </div>
 <button class="reject" onclick="reject('${doc.id}')">✖</button>
 </div>`;
 
 /* FILTER */
-if(o.status==="pending"||o.status==="preparing"){
+if(status==="pending"||status==="preparing"){
 dashboardList.innerHTML+=html;
 }
-else if(o.status==="out for delivery"){
+else if(status==="out for delivery"){
 deliveryList.innerHTML+=html;
 }
 
+allOrders.push(o);
 });
 
 applyFilter();
 });
 
-/* FILTER LOGIC */
+/* FILTER */
 function applyFilter(){
 ordersList.innerHTML="";
 
@@ -242,24 +240,19 @@ yesterday.setDate(today.getDate()-1);
 allOrders.forEach(o=>{
 if(!o.createdAt) return;
 
-let d=o.createdAt.toDate();
+let d=o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+
 let show=false;
 
-if(type==="today"){
-show=d.toDateString()===today.toDateString();
-}
-else if(type==="yesterday"){
-show=d.toDateString()===yesterday.toDateString();
-}
+if(type==="today") show=d.toDateString()===today.toDateString();
+else if(type==="yesterday") show=d.toDateString()===yesterday.toDateString();
 else{
 dateFilter.style.display="block";
-let selected=dateFilter.value;
-if(selected){
-show=d.toISOString().split("T")[0]===selected;
+if(dateFilter.value){
+show=d.toISOString().split("T")[0]===dateFilter.value;
 }
 }
 
-/* ONLY completed */
 if(show && (o.status==="delivered"||o.status==="rejected")){
 ordersList.innerHTML+=`
 <div class="card">
@@ -268,12 +261,10 @@ ${o.id.slice(0,6)} - ${o.status}
 }
 });
 
-if(type!=="custom"){
-dateFilter.style.display="none";
-}
+if(type!=="custom") dateFilter.style.display="none";
 }
 
-/* ORDER */
+/* ORDER DETAILS */
 let selectedOrderId=null;
 
 function openOrder(id){
@@ -281,15 +272,16 @@ selectedOrderId=id;
 stopAlert();
 
 db.collection("orders").doc(id).get().then(doc=>{
-let o=doc.data();
+let o=doc.data() || {};
 
 orderDetails.innerHTML=`
-<b>User:</b> ${o.userName}<br>
-<b>Items:</b> ${o.items.map(i=>i.name).join(", ")}<br>
-<b>Address:</b> ${o.address}
+<b>User:</b> ${o.userName || "Unknown"}<br>
+<b>Items:</b> ${(o.items||[]).map(i=>i.name+" x"+i.qty).join(", ")}<br>
+<b>Address:</b> ${o.address || "N/A"}<br>
+<b>Total:</b> ₹${o.total || 0}
 `;
 
-statusSelect.value=o.status;
+statusSelect.value=o.status || "pending";
 orderModal.style.display="flex";
 });
 }
@@ -304,17 +296,6 @@ orderModal.style.display="none";
 function reject(id){
 db.collection("orders").doc(id).update({status:"rejected"});
 }
-
-/* PUSH */
-Notification.requestPermission().then(p=>{
-if(p==="granted"){
-messaging.getToken({
-vapidKey:"BLK2ZeC0XbIEylS90olGsHR6x2xrHKJ6dPXCWCtv5TMHv_2MW-ZcWh6VvQP08YCXek6YfUCCOacZQ-kqFYyoaKg"
-});
-}
-});
-
-messaging.onMessage(()=>alert("New Order Received!"));
 
 /* DOM */
 const menu=document.getElementById("menu");
