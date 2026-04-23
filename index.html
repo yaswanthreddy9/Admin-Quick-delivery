@@ -10,11 +10,25 @@ body{margin:0;font-family:Arial;background:#f5f5f5}
 
 /* HEADER */
 header{
-  background:#111;
-  color:white;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
+background:#111;color:white;padding:15px;
+display:flex;align-items:center;gap:10px;
+}
+
+/* MENU */
+.menu{
+position:fixed;left:-250px;top:0;width:250px;height:100%;
+background:white;transition:0.3s;z-index:1000;
+}
+.menu.open{left:0}
+
+.menu-item{
+padding:15px;border-bottom:1px solid #eee;cursor:pointer;
+}
+
+/* OVERLAY */
+#overlay{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.4);display:none;
 }
 
 /* CONTAINER */
@@ -22,30 +36,32 @@ header{
 
 /* CARD */
 .card{
-  background:white;
-  padding:15px;
-  margin-bottom:10px;
-  border-radius:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+background:white;padding:15px;margin:10px 0;
+border-radius:10px;cursor:pointer;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* MODAL */
+.modal{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.5);
+display:none;justify-content:center;align-items:center;
+}
+.box{
+background:white;padding:20px;border-radius:10px;
+width:90%;max-width:400px;
 }
 
 /* INPUT */
 input,select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
+width:100%;padding:10px;margin:5px 0;
+border-radius:6px;border:1px solid #ccc;
 }
 
 /* BUTTON */
 button{
-  padding:10px;
-  border:none;
-  border-radius:6px;
-  background:#16a34a;
-  color:white;
-  cursor:pointer;
+padding:10px;border:none;border-radius:6px;
+background:#16a34a;color:white;cursor:pointer;
 }
 .logout{background:red}
 </style>
@@ -54,38 +70,52 @@ button{
 <body>
 
 <header>
-Admin Panel
-<div>
-<button onclick="login()">Login</button>
-<button class="logout" onclick="logout()">Logout</button>
-</div>
+<span onclick="openMenu()">☰</span>
+Admin Dashboard
 </header>
+
+<div id="overlay" onclick="closeMenu()"></div>
+
+<!-- MENU -->
+<div id="menu" class="menu">
+<div class="menu-item" onclick="showOrders()">📦 Orders</div>
+<div class="menu-item" onclick="showItems()">🍗 Items</div>
+<div class="menu-item" onclick="logout()">🚪 Logout</div>
+</div>
 
 <div class="container">
 
-<!-- ADD ITEM -->
-<div class="card">
-<h3>Add Food Item</h3>
+<!-- ORDERS -->
+<div id="ordersSection">
+<h3>Orders</h3>
+<div id="ordersList"></div>
+</div>
+
+<!-- ITEMS -->
+<div id="itemsSection" style="display:none">
+<h3>Add Item</h3>
 
 <input id="name" placeholder="Item Name">
 <input id="price" type="number" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addItem()">Add Item</button>
-</div>
+<button onclick="addItem()">Add</button>
 
-<!-- ITEMS LIST -->
-<div class="card">
-<h3>All Items</h3>
+<h3>Items</h3>
 <div id="itemsList"></div>
 </div>
 
-<!-- ORDERS -->
-<div class="card">
-<h3>Orders</h3>
-<div id="ordersList"></div>
 </div>
 
+<!-- ORDER DETAIL MODAL -->
+<div id="orderModal" class="modal">
+<div class="box">
+<h3>Order Details</h3>
+<div id="orderDetails"></div>
+
+<select id="statusSelect"></select>
+<button onclick="saveStatus()">Update Status</button>
+</div>
 </div>
 
 <!-- Firebase -->
@@ -94,6 +124,8 @@ Admin Panel
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
+const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
+
 const config={
 apiKey:"AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
 authDomain:"chicken-delivery-app-9e4f6.firebaseapp.com",
@@ -104,42 +136,61 @@ firebase.initializeApp(config);
 const db=firebase.firestore();
 const auth=firebase.auth();
 
-let currentUser=null;
+let selectedOrderId=null;
 
-/* LOGIN (GOOGLE) */
+/* AUTH */
+auth.onAuthStateChanged(user=>{
+if(!user){
+login();
+return;
+}
+
+if(user.email!==ADMIN_EMAIL){
+alert("Not authorized");
+auth.signOut();
+return;
+}
+});
+
+/* LOGIN */
 function login(){
 const provider=new firebase.auth.GoogleAuthProvider();
 auth.signInWithPopup(provider);
 }
 
 /* LOGOUT */
-function logout(){
-auth.signOut();
+function logout(){auth.signOut();}
+
+/* MENU */
+function openMenu(){
+menu.classList.add("open");
+overlay.style.display="block";
+}
+function closeMenu(){
+menu.classList.remove("open");
+overlay.style.display="none";
 }
 
-/* AUTH STATE */
-auth.onAuthStateChanged(user=>{
-currentUser=user;
-});
+/* NAV */
+function showOrders(){
+ordersSection.style.display="block";
+itemsSection.style.display="none";
+closeMenu();
+}
+function showItems(){
+ordersSection.style.display="none";
+itemsSection.style.display="block";
+closeMenu();
+}
 
-/* ADD ITEM */
+/* ITEMS */
 function addItem(){
-if(!currentUser){
-alert("Login first");
-return;
-}
-
 db.collection("items").add({
 name:name.value,
 price:Number(price.value),
 image:image.value
 });
-
-alert("Item added");
-
-name.value="";
-price.value="";
-image.value="";
+alert("Added");
 }
 
 /* LOAD ITEMS */
@@ -152,7 +203,8 @@ itemsList.innerHTML+=`
 <div class="card">
 <b>${i.name}</b><br>
 ₹${i.price}<br>
-<img src="${i.image}" width="100%">
+<img src="${i.image}" width="100%" 
+onerror="this.src='https://via.placeholder.com/150'">
 </div>`;
 });
 });
@@ -160,30 +212,67 @@ itemsList.innerHTML+=`
 /* LOAD ORDERS */
 db.collection("orders").onSnapshot(snap=>{
 ordersList.innerHTML="";
+
 snap.forEach(doc=>{
 let o=doc.data();
 
 ordersList.innerHTML+=`
-<div class="card">
-<b>Items:</b> ${o.items.length}<br>
-<b>Address:</b> ${o.address}<br>
-<b>Payment:</b> ${o.payment}<br>
-
-<select onchange="updateStatus('${doc.id}', this.value)">
-<option ${o.status=="pending"?"selected":""}>pending</option>
-<option ${o.status=="preparing"?"selected":""}>preparing</option>
-<option ${o.status=="delivered"?"selected":""}>delivered</option>
-</select>
+<div class="card" onclick="openOrder('${doc.id}')">
+Order: ${doc.id.slice(0,6)} <br>
+Status: ${o.status || "pending"}
 </div>`;
 });
 });
 
-/* UPDATE STATUS */
-function updateStatus(id,status){
-db.collection("orders").doc(id).update({
-status:status
+/* OPEN ORDER */
+function openOrder(id){
+selectedOrderId=id;
+
+db.collection("orders").doc(id).get().then(doc=>{
+let o=doc.data();
+
+orderDetails.innerHTML=`
+<b>Items:</b><br>
+${o.items.map(i=>i.name).join("<br>")}<br><br>
+<b>Address:</b> ${o.address}<br>
+<b>Payment:</b> ${o.payment}
+`;
+
+statusSelect.innerHTML=`
+<option ${o.status=="pending"?"selected":""}>pending</option>
+<option ${o.status=="preparing"?"selected":""}>preparing</option>
+<option ${o.status=="delivered"?"selected":""}>delivered</option>
+`;
+
+orderModal.style.display="flex";
 });
 }
+
+/* SAVE STATUS */
+function saveStatus(){
+db.collection("orders").doc(selectedOrderId).update({
+status:statusSelect.value
+});
+orderModal.style.display="none";
+}
+
+/* CLOSE MODAL */
+window.onclick=e=>{
+if(e.target.classList.contains("modal")){
+e.target.style.display="none";
+}
+};
+
+/* DOM */
+const menu=document.getElementById("menu");
+const overlay=document.getElementById("overlay");
+const ordersList=document.getElementById("ordersList");
+const itemsList=document.getElementById("itemsList");
+const ordersSection=document.getElementById("ordersSection");
+const itemsSection=document.getElementById("itemsSection");
+const orderModal=document.getElementById("orderModal");
+const orderDetails=document.getElementById("orderDetails");
+const statusSelect=document.getElementById("statusSelect");
 </script>
 
 </body>
