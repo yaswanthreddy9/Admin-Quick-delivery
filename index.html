@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{margin:0;font-family:Arial;background:#f5f5f5}
+
+/* HEADER */
+header{
+  background:#111;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* CONTAINER */
+.container{padding:15px}
+
+/* CARD */
+.card{
+  background:white;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* INPUT */
+input,select{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+/* BUTTON */
+button{
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#16a34a;
+  color:white;
+  cursor:pointer;
+}
+.logout{background:red}
+</style>
+</head>
+
+<body>
+
+<header>
+Admin Panel
+<div>
+<button onclick="login()">Login</button>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+</header>
+
+<div class="container">
+
+<!-- ADD ITEM -->
+<div class="card">
+<h3>Add Food Item</h3>
+
+<input id="name" placeholder="Item Name">
+<input id="price" type="number" placeholder="Price">
+<input id="image" placeholder="Image URL">
+
+<button onclick="addItem()">Add Item</button>
+</div>
+
+<!-- ITEMS LIST -->
+<div class="card">
+<h3>All Items</h3>
+<div id="itemsList"></div>
+</div>
+
+<!-- ORDERS -->
+<div class="card">
+<h3>Orders</h3>
+<div id="ordersList"></div>
+</div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+const config={
+apiKey:"AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
+authDomain:"chicken-delivery-app-9e4f6.firebaseapp.com",
+projectId:"chicken-delivery-app-9e4f6"
+};
+
+firebase.initializeApp(config);
+const db=firebase.firestore();
+const auth=firebase.auth();
+
+let currentUser=null;
+
+/* LOGIN (GOOGLE) */
+function login(){
+const provider=new firebase.auth.GoogleAuthProvider();
+auth.signInWithPopup(provider);
+}
+
+/* LOGOUT */
+function logout(){
+auth.signOut();
+}
+
+/* AUTH STATE */
+auth.onAuthStateChanged(user=>{
+currentUser=user;
+});
+
+/* ADD ITEM */
+function addItem(){
+if(!currentUser){
+alert("Login first");
+return;
+}
+
+db.collection("items").add({
+name:name.value,
+price:Number(price.value),
+image:image.value
+});
+
+alert("Item added");
+
+name.value="";
+price.value="";
+image.value="";
+}
+
+/* LOAD ITEMS */
+db.collection("items").onSnapshot(snap=>{
+itemsList.innerHTML="";
+snap.forEach(doc=>{
+let i=doc.data();
+
+itemsList.innerHTML+=`
+<div class="card">
+<b>${i.name}</b><br>
+₹${i.price}<br>
+<img src="${i.image}" width="100%">
+</div>`;
+});
+});
+
+/* LOAD ORDERS */
+db.collection("orders").onSnapshot(snap=>{
+ordersList.innerHTML="";
+snap.forEach(doc=>{
+let o=doc.data();
+
+ordersList.innerHTML+=`
+<div class="card">
+<b>Items:</b> ${o.items.length}<br>
+<b>Address:</b> ${o.address}<br>
+<b>Payment:</b> ${o.payment}<br>
+
+<select onchange="updateStatus('${doc.id}', this.value)">
+<option ${o.status=="pending"?"selected":""}>pending</option>
+<option ${o.status=="preparing"?"selected":""}>preparing</option>
+<option ${o.status=="delivered"?"selected":""}>delivered</option>
+</select>
+</div>`;
+});
+});
+
+/* UPDATE STATUS */
+function updateStatus(id,status){
+db.collection("orders").doc(id).update({
+status:status
+});
+}
+</script>
+
+</body>
+</html>
