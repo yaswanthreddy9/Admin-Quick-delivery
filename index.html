@@ -7,17 +7,25 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5}
-header{background:#111;color:white;padding:15px;display:flex;gap:10px}
 
-/* MENU */
+/* HEADER */
+header{
+background:#111;color:white;padding:15px;
+display:flex;align-items:center;gap:10px;
+}
+
+/* SIDEBAR */
 .menu{
 position:fixed;left:-250px;top:0;width:250px;height:100%;
 background:white;transition:0.3s;z-index:1000;
 }
 .menu.open{left:0}
 
-.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
+.menu-item{
+padding:15px;border-bottom:1px solid #eee;cursor:pointer;
+}
 
+/* OVERLAY */
 #overlay{
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.4);display:none;
@@ -57,23 +65,43 @@ Admin Panel
 
 <div id="overlay" onclick="closeMenu()"></div>
 
+<!-- MENU -->
 <div id="menu" class="menu">
+<div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
 <div class="menu-item" onclick="showItems()">🍗 Items</div>
+<div class="menu-item" onclick="showOrders()">📦 Orders</div>
 <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
 
+<!-- DASHBOARD -->
+<div id="dashboardSection">
+<h3>Dashboard</h3>
+<div id="dashboardData"></div>
+</div>
+
+<!-- ITEMS -->
+<div id="itemsSection" style="display:none">
+
 <h3>Add / Edit Item</h3>
 
-<input id="name" placeholder="Item Name">
-<input id="price" type="number" placeholder="Price">
-<input id="image" placeholder="Image URL">
+<input id="nameInput" placeholder="Item Name">
+<input id="priceInput" type="number" placeholder="Price">
+<input id="imageInput" placeholder="Image URL">
 
 <button onclick="saveItem()">Save Item</button>
 
 <h3>Items</h3>
 <div id="itemsList"></div>
+
+</div>
+
+<!-- ORDERS -->
+<div id="ordersSection" style="display:none">
+<h3>Orders</h3>
+<div id="ordersList"></div>
+</div>
 
 </div>
 
@@ -100,23 +128,24 @@ let editId=null;
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
-currentUser=user;
-
 if(!user){
 googleLogin();
 return;
 }
 
 if(user.email!==ADMIN_EMAIL){
-alert("Not admin");
+alert("Not authorized");
 auth.signOut();
+return;
 }
+
+currentUser=user;
 });
 
 /* GOOGLE LOGIN */
 function googleLogin(){
 const provider=new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider).catch(err=>alert(err.message));
+auth.signInWithPopup(provider);
 }
 
 /* LOGOUT */
@@ -132,39 +161,59 @@ menu.classList.remove("open");
 overlay.style.display="none";
 }
 
-/* SAVE ITEM (ADD + EDIT) */
-function saveItem(){
-
-if(!currentUser){
-alert("Login required");
-return;
+/* NAVIGATION */
+function showDashboard(){
+dashboardSection.style.display="block";
+itemsSection.style.display="none";
+ordersSection.style.display="none";
+closeMenu();
+}
+function showItems(){
+dashboardSection.style.display="none";
+itemsSection.style.display="block";
+ordersSection.style.display="none";
+closeMenu();
+}
+function showOrders(){
+dashboardSection.style.display="none";
+itemsSection.style.display="none";
+ordersSection.style.display="block";
+closeMenu();
 }
 
-if(!name.value || !price.value){
-alert("Fill all fields");
+/* SAVE ITEM */
+function saveItem(){
+
+const name = document.getElementById("nameInput").value.trim();
+const price = document.getElementById("priceInput").value.trim();
+const image = document.getElementById("imageInput").value.trim();
+
+if(!name || !price){
+alert("Fill all fields properly");
 return;
 }
 
 let data={
-name:name.value,
-price:Number(price.value),
-image:image.value
+name:name,
+price:Number(price),
+image:image
 };
 
 if(editId){
 db.collection("items").doc(editId).update(data)
 .then(()=>alert("Updated"))
-.catch(err=>alert(err.message));
+.catch(e=>alert(e.message));
 editId=null;
 }else{
 db.collection("items").add(data)
 .then(()=>alert("Added"))
-.catch(err=>alert(err.message));
+.catch(e=>alert(e.message));
 }
 
-name.value="";
-price.value="";
-image.value="";
+/* CLEAR */
+document.getElementById("nameInput").value="";
+document.getElementById("priceInput").value="";
+document.getElementById("imageInput").value="";
 }
 
 /* LOAD ITEMS */
@@ -192,9 +241,9 @@ onerror="this.src='https://via.placeholder.com/150'">
 /* EDIT */
 function editItem(id,n,p,img){
 editId=id;
-name.value=n;
-price.value=p;
-image.value=img;
+document.getElementById("nameInput").value=n;
+document.getElementById("priceInput").value=p;
+document.getElementById("imageInput").value=img;
 window.scrollTo(0,0);
 }
 
@@ -205,10 +254,37 @@ db.collection("items").doc(id).delete();
 }
 }
 
+/* LOAD ORDERS */
+db.collection("orders").onSnapshot(snap=>{
+ordersList.innerHTML="";
+let total=0;
+
+snap.forEach(doc=>{
+let o=doc.data();
+total++;
+
+ordersList.innerHTML+=`
+<div class="card">
+Order: ${doc.id.slice(0,6)}<br>
+Status: ${o.status || "pending"}
+</div>`;
+});
+
+dashboardData.innerHTML=`
+<div class="card">
+Total Orders: ${total}
+</div>`;
+});
+
 /* DOM */
 const menu=document.getElementById("menu");
 const overlay=document.getElementById("overlay");
 const itemsList=document.getElementById("itemsList");
+const ordersList=document.getElementById("ordersList");
+const dashboardData=document.getElementById("dashboardData");
+const dashboardSection=document.getElementById("dashboardSection");
+const itemsSection=document.getElementById("itemsSection");
+const ordersSection=document.getElementById("ordersSection");
 </script>
 
 </body>
