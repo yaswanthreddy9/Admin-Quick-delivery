@@ -7,32 +7,67 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5}
-header{background:#111;color:white;padding:15px;display:flex;gap:10px}
+
+/* HEADER */
+header{
+background:#111;color:white;padding:15px;
+display:flex;align-items:center;gap:10px;
+}
 
 /* SIDEBAR */
-.menu{position:fixed;left:-250px;top:0;width:250px;height:100%;
-background:white;transition:0.3s;z-index:1000;}
+.menu{
+position:fixed;left:-260px;top:0;width:260px;height:100%;
+background:white;transition:0.3s;z-index:1000;
+box-shadow:2px 0 10px rgba(0,0,0,0.2);
+}
 .menu.open{left:0}
-.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
 
-#overlay{position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.4);display:none}
+.menu-item{
+padding:15px;border-bottom:1px solid #eee;cursor:pointer;
+font-weight:500;
+}
+.menu-item:hover{background:#f2f2f2}
+
+/* OVERLAY */
+#overlay{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.4);display:none;
+}
+
+/* CONTENT */
+.container{padding:15px}
 
 /* CARD */
-.container{padding:15px}
-.card{background:white;padding:15px;margin:10px 0;
-border-radius:10px;cursor:pointer;
-box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+.card{
+background:white;padding:15px;margin:10px 0;
+border-radius:12px;cursor:pointer;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
 
-/* MODAL */
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.5);
-display:none;justify-content:center;align-items:center}
-.box{background:white;padding:20px;border-radius:10px;width:90%;max-width:400px}
+/* INPUT */
+input{
+width:100%;padding:10px;margin:6px 0;
+border-radius:6px;border:1px solid #ccc;
+}
 
 /* BUTTON */
-button{padding:8px;border:none;border-radius:6px;
-background:#16a34a;color:white;margin-top:5px}
+button{
+padding:10px;border:none;border-radius:6px;
+background:#16a34a;color:white;cursor:pointer;margin:3px;
+}
+.edit{background:orange}
+.delete{background:red}
+
+/* MODAL */
+.modal{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.5);
+display:none;justify-content:center;align-items:center;
+}
+.box{
+background:white;padding:20px;border-radius:10px;
+width:90%;max-width:400px;
+}
 </style>
 </head>
 
@@ -40,24 +75,52 @@ background:#16a34a;color:white;margin-top:5px}
 
 <header>
 <span onclick="openMenu()">☰</span>
-Admin Dashboard
+Admin Panel
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
 
+<!-- SIDEBAR -->
 <div id="menu" class="menu">
 <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
+<div class="menu-item" onclick="showItems()">🍗 Items</div>
+<div class="menu-item" onclick="showOrders()">📦 Orders</div>
 <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
+
+<!-- DASHBOARD -->
 <div id="dashboardSection">
 <h3>Live Orders</h3>
-<div id="ordersList"></div>
-</div>
+<div id="dashboardList"></div>
 </div>
 
-<!-- ORDER POPUP -->
+<!-- ITEMS -->
+<div id="itemsSection" style="display:none">
+
+<h3>Add / Edit Item</h3>
+
+<input id="nameInput" placeholder="Item Name">
+<input id="priceInput" type="number" placeholder="Price">
+<input id="imageInput" placeholder="Image URL">
+
+<button onclick="saveItem()">Save Item</button>
+
+<h3>Items</h3>
+<div id="itemsList"></div>
+
+</div>
+
+<!-- ORDERS -->
+<div id="ordersSection" style="display:none">
+<h3>Orders</h3>
+<div id="ordersList"></div>
+</div>
+
+</div>
+
+<!-- ORDER MODAL -->
 <div id="orderModal" class="modal">
 <div class="box">
 <h3>Order Details</h3>
@@ -94,17 +157,15 @@ firebase.initializeApp(config);
 const db=firebase.firestore();
 const auth=firebase.auth();
 
-let lastOrderCount = 0;
-let selectedOrderId = null;
+let lastOrderCount=0;
+let selectedOrderId=null;
+let editId=null;
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
-if(!user){
-login();
-return;
-}
+if(!user){login();return;}
 if(user.email!==ADMIN_EMAIL){
-alert("Not admin");
+alert("Not authorized");
 auth.signOut();
 }
 });
@@ -119,40 +180,105 @@ auth.signInWithPopup(provider);
 function logout(){auth.signOut();}
 
 /* MENU */
-function openMenu(){
-menu.classList.add("open");
-overlay.style.display="block";
+function openMenu(){menu.classList.add("open");overlay.style.display="block";}
+function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
+
+/* NAV */
+function showDashboard(){
+dashboardSection.style.display="block";
+itemsSection.style.display="none";
+ordersSection.style.display="none";
+closeMenu();
 }
-function closeMenu(){
-menu.classList.remove("open");
-overlay.style.display="none";
+function showItems(){
+dashboardSection.style.display="none";
+itemsSection.style.display="block";
+ordersSection.style.display="none";
+closeMenu();
+}
+function showOrders(){
+dashboardSection.style.display="none";
+itemsSection.style.display="none";
+ordersSection.style.display="block";
+closeMenu();
 }
 
-/* LOAD ORDERS LIVE */
+/* SAVE ITEM */
+function saveItem(){
+let name=nameInput.value.trim();
+let price=priceInput.value.trim();
+let image=imageInput.value.trim();
+
+if(!name||!price){alert("Fill all fields");return;}
+
+let data={name,price:Number(price),image};
+
+if(editId){
+db.collection("items").doc(editId).update(data);
+editId=null;
+}else{
+db.collection("items").add(data);
+}
+
+nameInput.value="";
+priceInput.value="";
+imageInput.value="";
+}
+
+/* LOAD ITEMS */
+db.collection("items").onSnapshot(snap=>{
+itemsList.innerHTML="";
+snap.forEach(doc=>{
+let i=doc.data();
+
+itemsList.innerHTML+=`
+<div class="card">
+<b>${i.name}</b> - ₹${i.price}<br>
+<img src="${i.image}" width="100%" onerror="this.src='https://via.placeholder.com/150'">
+<br>
+<button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
+<button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
+</div>`;
+});
+});
+
+/* EDIT */
+function editItem(id,n,p,img){
+editId=id;
+nameInput.value=n;
+priceInput.value=p;
+imageInput.value=img;
+window.scrollTo(0,0);
+}
+
+/* DELETE */
+function deleteItem(id){
+if(confirm("Delete?")) db.collection("items").doc(id).delete();
+}
+
+/* LOAD ORDERS */
 db.collection("orders").onSnapshot(snap=>{
+dashboardList.innerHTML="";
 ordersList.innerHTML="";
 
-let currentCount = snap.size;
-
-/* 🔔 NEW ORDER ALERT */
-if(lastOrderCount && currentCount > lastOrderCount){
+if(lastOrderCount && snap.size>lastOrderCount){
 alertSound.play();
-alert("New Order Received!");
+alert("New Order!");
 }
+lastOrderCount=snap.size;
 
-lastOrderCount = currentCount;
-
-/* 📊 DASHBOARD LIST */
 snap.forEach(doc=>{
 let o=doc.data();
 
-ordersList.innerHTML+=`
+let html=`
 <div class="card" onclick="openOrder('${doc.id}')">
-Order: ${doc.id.slice(0,6)} <br>
-Status: ${o.status || "pending"}
+Order: ${doc.id.slice(0,6)}<br>
+Status: ${o.status||"pending"}
 </div>`;
-});
 
+dashboardList.innerHTML+=html;
+ordersList.innerHTML+=html;
+});
 });
 
 /* OPEN ORDER */
@@ -163,14 +289,12 @@ db.collection("orders").doc(id).get().then(doc=>{
 let o=doc.data();
 
 orderDetails.innerHTML=`
-<b>Items:</b><br>
-${o.items.map(i=>i.name).join("<br>")}<br><br>
+<b>Items:</b><br>${o.items.map(i=>i.name).join("<br>")}<br><br>
 <b>Address:</b> ${o.address}<br>
 <b>Payment:</b> ${o.payment}
 `;
 
-statusSelect.value = o.status || "pending";
-
+statusSelect.value=o.status||"pending";
 orderModal.style.display="flex";
 });
 }
@@ -193,11 +317,6 @@ e.target.style.display="none";
 /* DOM */
 const menu=document.getElementById("menu");
 const overlay=document.getElementById("overlay");
-const ordersList=document.getElementById("ordersList");
-const orderModal=document.getElementById("orderModal");
-const orderDetails=document.getElementById("orderDetails");
-const statusSelect=document.getElementById("statusSelect");
-const alertSound=document.getElementById("alertSound");
 </script>
 
 </body>
