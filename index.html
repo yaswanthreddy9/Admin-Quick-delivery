@@ -7,12 +7,7 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5}
-
-/* HEADER */
-header{
-background:#111;color:white;padding:15px;
-display:flex;align-items:center;gap:10px;
-}
+header{background:#111;color:white;padding:15px;display:flex;gap:10px}
 
 /* MENU */
 .menu{
@@ -21,11 +16,8 @@ background:white;transition:0.3s;z-index:1000;
 }
 .menu.open{left:0}
 
-.menu-item{
-padding:15px;border-bottom:1px solid #eee;cursor:pointer;
-}
+.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer}
 
-/* OVERLAY */
 #overlay{
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.4);display:none;
@@ -37,33 +29,22 @@ background:rgba(0,0,0,0.4);display:none;
 /* CARD */
 .card{
 background:white;padding:15px;margin:10px 0;
-border-radius:10px;cursor:pointer;
+border-radius:10px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* MODAL */
-.modal{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.5);
-display:none;justify-content:center;align-items:center;
-}
-.box{
-background:white;padding:20px;border-radius:10px;
-width:90%;max-width:400px;
-}
-
 /* INPUT */
-input,select{
+input{
 width:100%;padding:10px;margin:5px 0;
 border-radius:6px;border:1px solid #ccc;
 }
 
-/* BUTTON */
 button{
-padding:10px;border:none;border-radius:6px;
-background:#16a34a;color:white;cursor:pointer;
+padding:8px;border:none;border-radius:6px;
+background:#16a34a;color:white;cursor:pointer;margin:2px;
 }
-.logout{background:red}
+.delete{background:red}
+.edit{background:orange}
 </style>
 </head>
 
@@ -71,51 +52,29 @@ background:#16a34a;color:white;cursor:pointer;
 
 <header>
 <span onclick="openMenu()">☰</span>
-Admin Dashboard
+Admin Panel
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
 
-<!-- MENU -->
 <div id="menu" class="menu">
-<div class="menu-item" onclick="showOrders()">📦 Orders</div>
 <div class="menu-item" onclick="showItems()">🍗 Items</div>
 <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
 
-<!-- ORDERS -->
-<div id="ordersSection">
-<h3>Orders</h3>
-<div id="ordersList"></div>
-</div>
-
-<!-- ITEMS -->
-<div id="itemsSection" style="display:none">
-<h3>Add Item</h3>
+<h3>Add / Edit Item</h3>
 
 <input id="name" placeholder="Item Name">
 <input id="price" type="number" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addItem()">Add</button>
+<button onclick="saveItem()">Save Item</button>
 
 <h3>Items</h3>
 <div id="itemsList"></div>
-</div>
 
-</div>
-
-<!-- ORDER DETAIL MODAL -->
-<div id="orderModal" class="modal">
-<div class="box">
-<h3>Order Details</h3>
-<div id="orderDetails"></div>
-
-<select id="statusSelect"></select>
-<button onclick="saveStatus()">Update Status</button>
-</div>
 </div>
 
 <!-- Firebase -->
@@ -136,26 +95,28 @@ firebase.initializeApp(config);
 const db=firebase.firestore();
 const auth=firebase.auth();
 
-let selectedOrderId=null;
+let currentUser=null;
+let editId=null;
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
+currentUser=user;
+
 if(!user){
-login();
+googleLogin();
 return;
 }
 
 if(user.email!==ADMIN_EMAIL){
-alert("Not authorized");
+alert("Not admin");
 auth.signOut();
-return;
 }
 });
 
-/* LOGIN */
-function login(){
+/* GOOGLE LOGIN */
+function googleLogin(){
 const provider=new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider);
+auth.signInWithPopup(provider).catch(err=>alert(err.message));
 }
 
 /* LOGOUT */
@@ -171,108 +132,83 @@ menu.classList.remove("open");
 overlay.style.display="none";
 }
 
-/* NAV */
-function showOrders(){
-ordersSection.style.display="block";
-itemsSection.style.display="none";
-closeMenu();
-}
-function showItems(){
-ordersSection.style.display="none";
-itemsSection.style.display="block";
-closeMenu();
+/* SAVE ITEM (ADD + EDIT) */
+function saveItem(){
+
+if(!currentUser){
+alert("Login required");
+return;
 }
 
-/* ITEMS */
-function addItem(){
-db.collection("items").add({
+if(!name.value || !price.value){
+alert("Fill all fields");
+return;
+}
+
+let data={
 name:name.value,
 price:Number(price.value),
 image:image.value
-});
-alert("Added");
+};
+
+if(editId){
+db.collection("items").doc(editId).update(data)
+.then(()=>alert("Updated"))
+.catch(err=>alert(err.message));
+editId=null;
+}else{
+db.collection("items").add(data)
+.then(()=>alert("Added"))
+.catch(err=>alert(err.message));
+}
+
+name.value="";
+price.value="";
+image.value="";
 }
 
 /* LOAD ITEMS */
 db.collection("items").onSnapshot(snap=>{
 itemsList.innerHTML="";
+
 snap.forEach(doc=>{
 let i=doc.data();
 
 itemsList.innerHTML+=`
 <div class="card">
-<b>${i.name}</b><br>
-₹${i.price}<br>
-<img src="${i.image}" width="100%" 
+<b>${i.name}</b> - ₹${i.price}<br>
+
+<img src="${i.image}" width="100%"
 onerror="this.src='https://via.placeholder.com/150'">
+
+<br>
+
+<button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
+<button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
 </div>`;
 });
 });
 
-/* LOAD ORDERS */
-db.collection("orders").onSnapshot(snap=>{
-ordersList.innerHTML="";
-
-snap.forEach(doc=>{
-let o=doc.data();
-
-ordersList.innerHTML+=`
-<div class="card" onclick="openOrder('${doc.id}')">
-Order: ${doc.id.slice(0,6)} <br>
-Status: ${o.status || "pending"}
-</div>`;
-});
-});
-
-/* OPEN ORDER */
-function openOrder(id){
-selectedOrderId=id;
-
-db.collection("orders").doc(id).get().then(doc=>{
-let o=doc.data();
-
-orderDetails.innerHTML=`
-<b>Items:</b><br>
-${o.items.map(i=>i.name).join("<br>")}<br><br>
-<b>Address:</b> ${o.address}<br>
-<b>Payment:</b> ${o.payment}
-`;
-
-statusSelect.innerHTML=`
-<option ${o.status=="pending"?"selected":""}>pending</option>
-<option ${o.status=="preparing"?"selected":""}>preparing</option>
-<option ${o.status=="delivered"?"selected":""}>delivered</option>
-`;
-
-orderModal.style.display="flex";
-});
+/* EDIT */
+function editItem(id,n,p,img){
+editId=id;
+name.value=n;
+price.value=p;
+image.value=img;
+window.scrollTo(0,0);
 }
 
-/* SAVE STATUS */
-function saveStatus(){
-db.collection("orders").doc(selectedOrderId).update({
-status:statusSelect.value
-});
-orderModal.style.display="none";
+/* DELETE */
+function deleteItem(id){
+if(confirm("Delete item?")){
+db.collection("items").doc(id).delete();
 }
-
-/* CLOSE MODAL */
-window.onclick=e=>{
-if(e.target.classList.contains("modal")){
-e.target.style.display="none";
 }
-};
 
 /* DOM */
 const menu=document.getElementById("menu");
 const overlay=document.getElementById("overlay");
-const ordersList=document.getElementById("ordersList");
 const itemsList=document.getElementById("itemsList");
-const ordersSection=document.getElementById("ordersSection");
-const itemsSection=document.getElementById("itemsSection");
-const orderModal=document.getElementById("orderModal");
-const orderDetails=document.getElementById("orderDetails");
-const statusSelect=document.getElementById("statusSelect");
 </script>
 
 </body>
