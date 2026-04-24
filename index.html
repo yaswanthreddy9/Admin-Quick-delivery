@@ -249,7 +249,11 @@ let t = o.createdAt.toMillis();
 /* FIRST LOAD: JUST SET MAX TIME */
 if(firstLoad){
 if(t > lastOrderTime) lastOrderTime = t;
-return;
+}else{
+if(t > lastOrderTime){
+lastOrderTime = t;
+playAlert();
+}
 }
 
 /* NEW ORDER */
