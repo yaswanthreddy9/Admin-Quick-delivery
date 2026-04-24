@@ -198,10 +198,33 @@ closeMenu();
 }
 
 /* 🔔 ALERT */
+let alarmInterval = null;
+let alarmAudio = null;
+
 function playAlert(){
-const audio=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-audio.play();
-alert("New Order!");
+
+/* PREVENT MULTIPLE */
+if(alarmInterval) return;
+
+/* LOUD SOUND */
+alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+alarmAudio.loop = true;
+alarmAudio.volume = 1;
+
+/* PLAY (handle autoplay block) */
+alarmAudio.play().catch(()=>{
+console.log("User interaction needed for sound");
+});
+
+/* VIBRATION (mobile) */
+if(navigator.vibrate){
+navigator.vibrate([500,300,500,300,500]);
+}
+
+/* REPEAT SAFETY */
+alarmInterval = setInterval(()=>{
+if(alarmAudio) alarmAudio.play();
+},3000);
 }
 
 /* LOAD ORDERS */
@@ -245,6 +268,18 @@ deliveryList.innerHTML+=html;
 
 /* OPEN ORDER */
 function openOrder(id){
+
+/* STOP ALERT */
+if(alarmAudio){
+alarmAudio.pause();
+alarmAudio.currentTime = 0;
+alarmAudio = null;
+}
+if(alarmInterval){
+clearInterval(alarmInterval);
+alarmInterval = null;
+}
+
 selectedOrderId=id;
 
 db.collection("orders").doc(id).get().then(doc=>{
@@ -252,7 +287,7 @@ let o=doc.data();
 
 orderDetails.innerHTML=`
 <b>User:</b> ${o.userName || "User"}<br>
-<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}
+<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}<br>
 <b>Address:</b> ${o.address}<br>
 <b>Payment:</b> ${o.payment}
 `;
