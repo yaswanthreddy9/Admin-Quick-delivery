@@ -155,8 +155,9 @@ const auth=firebase.auth();
 
 let selectedOrderId=null;
 let editId=null;
-let lastOrderTime=null;
-
+let lastOrderTime = 0;
+let firstLoad = true;
+  
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
@@ -243,12 +244,18 @@ let o=doc.data();
 
 /* ALERT */
 if(o.createdAt){
-let t=o.createdAt.toMillis();
-if(lastOrderTime && t>lastOrderTime){
-playAlert();
+let t = o.createdAt.toMillis();
+
+/* FIRST LOAD: JUST SET MAX TIME */
+if(firstLoad){
+if(t > lastOrderTime) lastOrderTime = t;
+return;
 }
-if(!lastOrderTime || t>lastOrderTime){
-lastOrderTime=t;
+
+/* NEW ORDER */
+if(t > lastOrderTime){
+lastOrderTime = t;
+playAlert();
 }
 }
 
@@ -267,6 +274,7 @@ deliveryList.innerHTML+=html;
 }
 
 });
+firstLoad = false; 
 });
 
 /* OPEN ORDER */
@@ -290,7 +298,7 @@ let o=doc.data();
 
 orderDetails.innerHTML=`
 <b>User:</b> ${o.userName || "User"}<br>
-<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}
+<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}<br>
 <b>Address:</b> ${o.address}<br>
 <b>Payment:</b> ${o.payment}
 `;
