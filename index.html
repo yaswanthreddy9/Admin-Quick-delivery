@@ -9,44 +9,29 @@
 body{margin:0;font-family:Arial;background:#f5f5f5}
 header{background:#111;color:white;padding:15px;display:flex;gap:10px}
 
-/* SIDEBAR */
-.menu{
-position:fixed;left:-260px;top:0;width:260px;height:100%;
-background:white;transition:0.3s;z-index:1000;
-}
+.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;
+background:white;transition:0.3s;z-index:1000;}
 .menu.open{left:0}
 
-.menu-header{
-background:#111;color:white;padding:20px;
-}
+.menu-header{background:#111;color:white;padding:20px;}
+.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer;}
 
-.menu-item{
-padding:15px;border-bottom:1px solid #eee;cursor:pointer;
-}
+#overlay{position:fixed;width:100%;height:100%;
+background:rgba(0,0,0,0.4);display:none;}
 
-/* OVERLAY */
-#overlay{
-position:fixed;width:100%;height:100%;
-background:rgba(0,0,0,0.4);display:none;
-}
-
-/* CONTENT */
 .container{padding:15px}
 
-/* CARD */
 .card{
 background:white;padding:15px;margin:10px 0;
 border-radius:10px;cursor:pointer;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* INPUT */
 input{
 width:100%;padding:10px;margin:5px 0;
 border-radius:6px;border:1px solid #ccc;
 }
 
-/* BUTTON */
 button{
 padding:8px;border:none;border-radius:6px;
 background:#16a34a;color:white;margin:3px;cursor:pointer;
@@ -54,7 +39,6 @@ background:#16a34a;color:white;margin:3px;cursor:pointer;
 .edit{background:orange}
 .delete{background:red}
 
-/* MODAL */
 .modal{
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.5);
@@ -76,12 +60,8 @@ Admin Panel
 
 <div id="overlay" onclick="closeMenu()"></div>
 
-<!-- SIDEBAR -->
 <div id="menu" class="menu">
-<div class="menu-header">
-<h3>Admin</h3>
-</div>
-
+<div class="menu-header"><h3>Admin</h3></div>
 <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
 <div class="menu-item" onclick="showDelivery()">🚚 Delivery</div>
 <div class="menu-item" onclick="showItems()">🍗 Items</div>
@@ -89,36 +69,28 @@ Admin Panel
 </div>
 
 <div class="container">
-
-<!-- DASHBOARD -->
 <div id="dashboardSection">
 <h3>Live Orders</h3>
 <div id="dashboardList"></div>
 </div>
 
-<!-- DELIVERY -->
 <div id="deliverySection" style="display:none">
 <h3>Out for Delivery</h3>
 <div id="deliveryList"></div>
 </div>
 
-<!-- ITEMS -->
 <div id="itemsSection" style="display:none">
 <h3>Add / Edit Item</h3>
-
 <input id="nameInput" placeholder="Item Name">
 <input id="priceInput" type="number" placeholder="Price">
 <input id="imageInput" placeholder="Image URL">
-
 <button onclick="saveItem()">Save Item</button>
 
 <h3>Items</h3>
 <div id="itemsList"></div>
 </div>
-
 </div>
 
-<!-- ORDER MODAL -->
 <div id="orderModal" class="modal">
 <div class="box">
 <h3>Order Details</h3>
@@ -135,7 +107,6 @@ Admin Panel
 </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -155,9 +126,10 @@ const auth=firebase.auth();
 
 let selectedOrderId=null;
 let editId=null;
+
 let lastOrderTime = 0;
 let firstLoad = true;
-  
+
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
@@ -167,8 +139,7 @@ alert("Not authorized");auth.signOut();
 });
 
 function login(){
-const provider=new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider);
+auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 }
 function logout(){auth.signOut();}
 
@@ -177,57 +148,30 @@ function openMenu(){menu.classList.add("open");overlay.style.display="block";}
 function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
 
 /* NAV */
-function showDashboard(){
-dashboardSection.style.display="block";
-deliverySection.style.display="none";
-itemsSection.style.display="none";
-closeMenu();
-}
-function showDelivery(){
-dashboardSection.style.display="none";
-deliverySection.style.display="block";
-itemsSection.style.display="none";
-closeMenu();
-}
-function showItems(){
-dashboardSection.style.display="none";
-deliverySection.style.display="none";
-itemsSection.style.display="block";
-closeMenu();
-}
+function showDashboard(){dashboardSection.style.display="block";deliverySection.style.display="none";itemsSection.style.display="none";closeMenu();}
+function showDelivery(){dashboardSection.style.display="none";deliverySection.style.display="block";itemsSection.style.display="none";closeMenu();}
+function showItems(){dashboardSection.style.display="none";deliverySection.style.display="none";itemsSection.style.display="block";closeMenu();}
 
-/* 🔔 ALERT */
-let alarmAudio = null;
-let alarmInterval = null;
+/* 🔊 ALERT SYSTEM */
+let alarmAudio=null;
+let alarmInterval=null;
 
 function playAlert(){
-
-/* PREVENT MULTIPLE */
 if(alarmInterval) return;
 
-/* LOUD ALARM SOUND */
-alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
-alarmAudio.loop = true;
-alarmAudio.volume = 1;
+alarmAudio=new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+alarmAudio.loop=true;
+alarmAudio.volume=1;
+alarmAudio.play().catch(()=>{});
 
-/* PLAY */
-alarmAudio.play().catch(()=>{
-console.log("Click once to enable sound");
-});
-
-/* VIBRATION (MOBILE) */
 if(navigator.vibrate){
 navigator.vibrate([500,300,500,300,500]);
 }
 
-/* BACKUP REPEAT */
-alarmInterval = setInterval(()=>{
-if(alarmAudio){
-alarmAudio.play().catch(()=>{});
-}
-}, 3000);
+alarmInterval=setInterval(()=>{
+if(alarmAudio) alarmAudio.play().catch(()=>{});
+},3000);
 
-/* KEEP YOUR EXISTING POPUP */
 alert("New Order!");
 }
 
@@ -242,28 +186,18 @@ deliveryList.innerHTML="";
 snap.forEach(doc=>{
 let o=doc.data();
 
-/* ALERT */
 if(o.createdAt){
-let t = o.createdAt.toMillis();
+let t=o.createdAt.toMillis();
 
 if(firstLoad){
-  if(t > lastOrderTime) lastOrderTime = t;
-}else{
-  if(t > lastOrderTime){
-    lastOrderTime = t;
-    playAlert();
-  }
+if(t>lastOrderTime) lastOrderTime=t;
 }
-}
-
-/* NEW ORDER */
-if(t > lastOrderTime){
-lastOrderTime = t;
+else if(t>lastOrderTime){
+lastOrderTime=t;
 playAlert();
 }
 }
 
-/* DASHBOARD */
 let html=`
 <div class="card" onclick="openOrder('${doc.id}')">
 <b>Order:</b> ${doc.id.slice(0,6)}<br>
@@ -272,27 +206,25 @@ let html=`
 
 dashboardList.innerHTML+=html;
 
-/* DELIVERY FILTER */
 if(o.status==="out for delivery"){
 deliveryList.innerHTML+=html;
 }
-
 });
-firstLoad = false; 
+
+firstLoad=false;
 });
 
 /* OPEN ORDER */
 function openOrder(id){
 
-/* STOP SOUND */
 if(alarmAudio){
 alarmAudio.pause();
-alarmAudio.currentTime = 0;
-alarmAudio = null;
+alarmAudio.currentTime=0;
+alarmAudio=null;
 }
 if(alarmInterval){
 clearInterval(alarmInterval);
-alarmInterval = null;
+alarmInterval=null;
 }
 
 selectedOrderId=id;
@@ -314,20 +246,16 @@ orderModal.style.display="flex";
 
 /* UPDATE STATUS */
 function updateStatus(){
-
-let status = statusSelect.value;
+let status=statusSelect.value;
 
 db.collection("orders").doc(selectedOrderId).update({
-status: status
+status:status
 });
 
-/* START TRACKING */
-if(status === "out for delivery"){
+if(status==="out for delivery"){
 startLiveTracking(selectedOrderId);
 }
-
-/* STOP TRACKING */
-if(status === "delivered" || status === "rejected"){
+if(status==="delivered"){
 stopTracking();
 }
 
@@ -356,17 +284,15 @@ priceInput.value="";
 imageInput.value="";
 }
 
-/* LOAD ITEMS */
 db.collection("items").onSnapshot(snap=>{
 itemsList.innerHTML="";
-
 snap.forEach(doc=>{
 let i=doc.data();
 
 itemsList.innerHTML+=`
 <div class="card">
 <b>${i.name}</b> - ₹${i.price}<br>
-<img src="${i.image}" width="100%" onerror="this.src='https://via.placeholder.com/150'">
+<img src="${i.image}" width="100%">
 <br>
 <button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
 <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
@@ -379,69 +305,32 @@ editId=id;
 nameInput.value=n;
 priceInput.value=p;
 imageInput.value=img;
-window.scrollTo(0,0);
 }
 function deleteItem(id){
 if(confirm("Delete?")) db.collection("items").doc(id).delete();
 }
 
-/* CLOSE MODAL */
-window.onclick=e=>{
-if(e.target.classList.contains("modal")){
-e.target.style.display="none";
-}
-};
-
-/* DOM */
-const menu=document.getElementById("menu");
-const overlay=document.getElementById("overlay");
-
-let watchId = null;
+/* TRACKING */
+let watchId=null;
 
 function startLiveTracking(orderId){
-
-if(!navigator.geolocation){
-alert("GPS not supported");
-return;
-}
-
-watchId = navigator.geolocation.watchPosition(pos=>{
-
+watchId=navigator.geolocation.watchPosition(pos=>{
 db.collection("orders").doc(orderId).update({
-location:{
-lat: pos.coords.latitude,
-lng: pos.coords.longitude
-}
+location:{lat:pos.coords.latitude,lng:pos.coords.longitude}
 });
-
-}, err=>{
-console.log(err);
-},{
-enableHighAccuracy:true,
-maximumAge:0,
-timeout:5000
 });
-
 }
 
 function stopTracking(){
 if(watchId){
 navigator.geolocation.clearWatch(watchId);
-watchId = null;
+watchId=null;
 }
 }
 
-// if(status === "out for delivery"){
-// startLiveTracking(selectedOrderId);
-
-// db.collection("orders").doc(selectedOrderId).update({
-// location: null
-// });
-// }  
-
-document.body.addEventListener("click", ()=>{
-let audio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
-audio.play().catch(()=>{});
+/* AUDIO UNLOCK */
+document.body.addEventListener("click",()=>{
+new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play().catch(()=>{});
 });
 
 </script>
