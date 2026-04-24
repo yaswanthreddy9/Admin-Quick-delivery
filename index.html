@@ -21,7 +21,7 @@ header { background: #111; color: white; padding: 15px; display: flex; gap: 10px
 
 .container { padding: 15px; }
 
-.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; }
 
 input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
@@ -85,7 +85,6 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
     <div id="settingsSection" style="display:none">
         <h3>Payment & QR Settings</h3>
         <div class="card">
-            
             <label style="font-weight: bold; color: #333;">1. Enter your UPI ID</label>
             <input id="adminUpiInput" placeholder="e.g., yourname@bank">
             
@@ -120,6 +119,14 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
     </div>
 </div>
 
+<div id="screenshotModal" class="modal" style="z-index: 9999; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
+    <div class="box" style="background: transparent; box-shadow: none; text-align: center; width: 95%; max-width: 500px;" onclick="event.stopPropagation();">
+        <h3 style="color: white; margin-top: 0;">Payment Screenshot</h3>
+        <img id="previewScreenshot" src="" style="width: 100%; border-radius: 12px; border: 4px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 70vh; object-fit: contain; background: black;">
+        <button onclick="closeScreenshotModal()" style="background: #dc2626; margin-top: 15px; font-size: 16px; width: 100%;">❌ Close Preview</button>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
@@ -133,7 +140,7 @@ const config = {
     apiKey: "AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
     authDomain: "chicken-delivery-app-9e4f6.firebaseapp.com",
     projectId: "chicken-delivery-app-9e4f6",
-    storageBucket: "chicken-delivery-app-9e4f6.firebasestorage.app" // Added Storage Bucket
+    storageBucket: "chicken-delivery-app-9e4f6.firebasestorage.app" // Ensure this is your correct bucket!
 };
 
 firebase.initializeApp(config);
@@ -210,7 +217,6 @@ function showSettings() { hideAllSections(); document.getElementById('settingsSe
 /* ================================
    PAYMENT SETTINGS LOGIC 
 ================================ */
-// Load Current Settings
 db.collection("settings").doc("payment").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
@@ -219,7 +225,6 @@ db.collection("settings").doc("payment").onSnapshot(doc => {
     }
 });
 
-// Save Settings
 async function savePaymentSettings() {
     let upiId = document.getElementById('adminUpiInput').value.trim();
     let fileInput = document.getElementById('adminQrInput');
@@ -233,7 +238,6 @@ async function savePaymentSettings() {
     try {
         let updateData = { upiId: upiId };
 
-        // If admin selected a new QR image to upload
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
             const storageRef = storage.ref();
@@ -243,11 +247,10 @@ async function savePaymentSettings() {
             updateData.qrUrl = await qrRef.getDownloadURL();
         }
 
-        // Save to Database
         await db.collection("settings").doc("payment").set(updateData, {merge: true});
         
         alert("✅ Payment Settings Live Updated!");
-        fileInput.value = ""; // Clear file input
+        fileInput.value = ""; 
         
     } catch (e) {
         console.error("Error saving settings", e);
@@ -277,10 +280,11 @@ db.collection("orders")
     snapshot.forEach(doc => {
         let o = doc.data();
         
-        // Show Payment Status and Screenshot Link if Paid Online
         let paymentInfo = `<b>Payment:</b> ${o.payment}`;
+        
+        // NEW: Inline Verification Button
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
-            paymentInfo += ` <br><a href="${o.paymentScreenshot}" target="_blank" style="color: blue; font-weight: bold; text-decoration: underline;">📸 View Screenshot</a>`;
+            paymentInfo += `<br><button onclick="event.stopPropagation(); viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: auto; padding: 6px 12px; margin-top: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📸 Verify Screenshot</button>`;
         }
 
         let html = `
@@ -310,9 +314,10 @@ function openOrder(id) {
     db.collection("orders").doc(id).get().then(doc => {
         let o = doc.data();
         
+        // Inside the order modal, we also let them verify the screenshot
         let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
-            paymentHTML += `<br><img src="${o.paymentScreenshot}" style="width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #ccc;">`;
+            paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`;
         }
 
         document.getElementById('orderDetails').innerHTML = `
@@ -336,6 +341,20 @@ function updateStatus() {
 }
 
 function closeModal() { document.getElementById('orderModal').style.display = "none"; }
+
+
+/* ================================
+   SCREENSHOT VERIFICATION POPUP
+================================ */
+function viewScreenshot(url) {
+    document.getElementById('previewScreenshot').src = url;
+    document.getElementById('screenshotModal').style.display = "flex";
+}
+
+function closeScreenshotModal() {
+    document.getElementById('screenshotModal').style.display = "none";
+    document.getElementById('previewScreenshot').src = "";
+}
 
 
 /* ================================
