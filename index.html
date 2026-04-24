@@ -250,7 +250,7 @@ let o=doc.data();
 
 orderDetails.innerHTML=`
 <b>User:</b> ${o.userName || "User"}<br>
-<b>Items:</b> ${o.items.map(i=>i.name).join(", ")}<br>
+<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}
 <b>Address:</b> ${o.address}<br>
 <b>Payment:</b> ${o.payment}
 `;
@@ -262,9 +262,23 @@ orderModal.style.display="flex";
 
 /* UPDATE STATUS */
 function updateStatus(){
+
+let status = statusSelect.value;
+
 db.collection("orders").doc(selectedOrderId).update({
-status:statusSelect.value
+status: status
 });
+
+/* START TRACKING */
+if(status === "out for delivery"){
+startLiveTracking(selectedOrderId);
+}
+
+/* STOP TRACKING */
+if(status === "delivered" || status === "rejected"){
+stopTracking();
+}
+
 orderModal.style.display="none";
 }
 
@@ -365,23 +379,15 @@ watchId = null;
 }
 }
 
-function updateStatus(orderId, status){
-
-db.collection("orders").doc(orderId).update({
-status: status
-});
-
-/* START TRACKING */
 if(status === "out for delivery"){
-startLiveTracking(orderId);
-}
+startLiveTracking(selectedOrderId);
 
-/* STOP TRACKING */
-if(status === "delivered" || status === "rejected"){
-stopTracking();
-}
-
+db.collection("orders").doc(selectedOrderId).update({
+location: null
+});
 }  
+
+
 </script>
 
 </body>
