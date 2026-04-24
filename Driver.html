@@ -141,6 +141,35 @@ try{
 wakeLock = await navigator.wakeLock.request('screen');
 }catch(e){}
 }
+
+db.collection("orders")
+.onSnapshot(snap=>{
+
+ordersList.innerHTML="";
+
+snap.forEach(doc=>{
+let o=doc.data();
+
+/* FILTER MANUALLY */
+if(o.status !== "out for delivery") return;
+
+ordersList.innerHTML+=`
+<div class="card">
+<b>Order:</b> ${doc.id.slice(0,6)}<br>
+<b>Address:</b> ${o.address || "No address"}<br>
+
+<button onclick="startDelivery('${doc.id}')">
+Start Delivery
+</button>
+
+<button class="stop" onclick="completeDelivery('${doc.id}')">
+Mark Delivered
+</button>
+</div>
+`;
+});
+
+});  
 </script>
 
 </body>
