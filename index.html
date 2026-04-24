@@ -157,8 +157,8 @@ const auth=firebase.auth();
 
 let selectedOrderId=null;
 let editId=null;
-let lastOrderTime=null;
-
+let latestTime = 0;
+let firstLoad = true;
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
@@ -236,21 +236,24 @@ dashboardList.innerHTML="";
 deliveryList.innerHTML="";
 
 snap.forEach(doc=>{
-initialized = true;  
+  
 let o=doc.data();
 
-/* ALERT */if(o.createdAt){
+/* ALERT */
+if(o.createdAt){
 let t = o.createdAt.toMillis();
 
-/* ONLY AFTER FIRST LOAD */
-if(initialized && lastOrderTime && t > lastOrderTime){
-console.log("New order detected");
-playAlert();
+/* FIRST LOAD (NO SOUND) */
+if(firstLoad){
+if(t > latestTime) latestTime = t;
+return;
 }
 
-/* TRACK LATEST */
-if(!lastOrderTime || t > lastOrderTime){
-lastOrderTime = t;
+/* NEW ORDER */
+if(t > latestTime){
+latestTime = t;
+console.log("New order 🔥");
+playAlert();
 }
 }
 
@@ -361,6 +364,7 @@ itemsList.innerHTML+=`
 <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
 </div>`;
 });
+firstLoad = false; 
 });
 
 function editItem(id,n,p,img){
