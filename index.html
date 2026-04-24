@@ -21,7 +21,7 @@ header { background: #111; color: white; padding: 15px; display: flex; gap: 10px
 
 .container { padding: 15px; }
 
-.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; }
+.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
 
 input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
@@ -32,6 +32,9 @@ button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a3
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1001; }
 .box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
 select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
+
+/* Call Button Styling */
+.btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; }
 </style>
 </head>
 
@@ -104,8 +107,12 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 
 <div id="orderModal" class="modal">
     <div class="box">
-        <h3 style="margin-top: 0;">Order Details</h3>
-        <div id="orderDetails" style="line-height: 1.6; margin-bottom: 15px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin: 0;">Order Details</h3>
+            <span id="modalOrderIdText" style="background: #111; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;"></span>
+        </div>
+        
+        <div id="orderDetails" style="line-height: 1.6; margin-bottom: 15px; margin-top: 15px;"></div>
 
         <select id="statusSelect">
             <option value="pending">pending</option>
@@ -140,7 +147,7 @@ const config = {
     apiKey: "AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
     authDomain: "chicken-delivery-app-9e4f6.firebaseapp.com",
     projectId: "chicken-delivery-app-9e4f6",
-    storageBucket: "chicken-delivery-app-9e4f6.firebasestorage.app" // Ensure this is your correct bucket!
+    storageBucket: "chicken-delivery-app-9e4f6.firebasestorage.app" 
 };
 
 firebase.initializeApp(config);
@@ -159,7 +166,9 @@ alarmAudio.loop = true;
 let isAudioUnlocked = false;
 let alarmInterval = null;
 
-function unlockAudio() {
+let wakeLock = null;
+async function unlockAudio() {
+    // 1. Unlock Audio
     alarmAudio.play().then(() => {
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
@@ -168,6 +177,20 @@ function unlockAudio() {
     }).catch(err => {
         alert("Could not enable audio. Please check your browser settings.");
     });
+
+    // 2. Wake Lock (Keep Screen Awake)
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            });
+        } catch (err) {
+            console.log("Wake Lock error:", err);
+        }
+    }
 }
 
 function playAlert() {
@@ -184,7 +207,7 @@ function stopAlert() {
 }
 
 /* ================================
-   AUTH 
+   AUTH & NAVIGATION
 ================================ */
 auth.onAuthStateChanged(user => {
     if(!user) { login(); return; }
@@ -196,9 +219,6 @@ auth.onAuthStateChanged(user => {
 function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 function logout() { auth.signOut(); }
 
-/* ================================
-   NAVIGATION 
-================================ */
 function openMenu() { document.getElementById('menu').classList.add("open"); document.getElementById('overlay').style.display = "block"; }
 function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
@@ -231,27 +251,21 @@ async function savePaymentSettings() {
     let btn = document.getElementById('saveSettingsBtn');
     
     if(!upiId) { alert("Please enter your UPI ID"); return; }
-
     btn.innerText = "Saving & Uploading...";
     btn.disabled = true;
 
     try {
         let updateData = { upiId: upiId };
-
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
             const storageRef = storage.ref();
             const qrRef = storageRef.child(`admin_settings/qr_code_${Date.now()}_${file.name}`);
-            
             await qrRef.put(file);
             updateData.qrUrl = await qrRef.getDownloadURL();
         }
-
         await db.collection("settings").doc("payment").set(updateData, {merge: true});
-        
         alert("✅ Payment Settings Live Updated!");
         fileInput.value = ""; 
-        
     } catch (e) {
         console.error("Error saving settings", e);
         alert("Error saving settings. Ensure your Storage Rules are set correctly.");
@@ -280,20 +294,28 @@ db.collection("orders")
     snapshot.forEach(doc => {
         let o = doc.data();
         
-        let paymentInfo = `<b>Payment:</b> ${o.payment}`;
+        // Use clean sequential number if it exists, otherwise use old format
+        let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
         
-        // NEW: Inline Verification Button
+        // Generate Call Button if phone number exists
+        let callButtonHTML = "";
+        if (o.userPhone) {
+            callButtonHTML = `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Customer</a>`;
+        }
+
+        let paymentInfo = `<b>Payment:</b> ${o.payment}`;
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
-            paymentInfo += `<br><button onclick="event.stopPropagation(); viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: auto; padding: 6px 12px; margin-top: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📸 Verify Screenshot</button>`;
+            paymentInfo += `<br><button onclick="event.stopPropagation(); viewScreenshot('${o.paymentScreenshot}')" style="background: #eefce9; color: #16a34a; border: 1px solid #16a34a; width: auto; padding: 6px 12px; margin-top: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸 Verify Screenshot</button>`;
         }
 
         let html = `
         <div class="card" onclick="openOrder('${doc.id}')">
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <b>Order: #${doc.id.slice(0,6).toUpperCase()}</b>
+                <b style="font-size: 17px;">#${displayId} - ${o.userName || "Customer"}</b>
                 <span style="color: ${o.status === 'pending' ? 'red' : 'green'}; font-weight:bold;">${o.status}</span>
             </div>
             ${paymentInfo}
+            <div style="margin-top: 5px;">${callButtonHTML}</div>
         </div>`;
 
         document.getElementById('dashboardList').innerHTML += html;
@@ -313,19 +335,24 @@ function openOrder(id) {
 
     db.collection("orders").doc(id).get().then(doc => {
         let o = doc.data();
+        let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
         
-        // Inside the order modal, we also let them verify the screenshot
+        document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
+
         let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
             paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`;
         }
+        
+        let callAction = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" style="width: 100%; text-align: center; box-sizing: border-box; margin-bottom: 10px;">📞 Call ${o.userPhone}</a>` : "";
 
         document.getElementById('orderDetails').innerHTML = `
-            <p><b>Customer:</b> ${o.userName || "Guest"}</p>
-            <p><b>Items:</b> ${o.items ? o.items.map(i=>`${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
+            ${callAction}
+            <p style="margin-top:0;"><b>Customer:</b> ${o.userName || "Guest"}</p>
+            <p><b>Items:</b><br> ${o.items ? o.items.map(i=>`• ${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
             <hr>
-            <p style="font-size: 18px; color: #16a34a;"><b>Total: ₹${o.total}</b></p>
-            <p><b>Address:</b> ${o.address}</p>
+            <p style="font-size: 18px; color: #16a34a; font-weight: bold;">Total: ₹${o.total}</p>
+            <p><b>Address:</b><br> ${o.address}</p>
             <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 10px;">${paymentHTML}</div>
         `;
 
@@ -384,7 +411,6 @@ db.collection("items").onSnapshot(snap => {
     document.getElementById('itemsList').innerHTML = "";
     snap.forEach(doc => {
         let i = doc.data();
-
         document.getElementById('itemsList').innerHTML += `
         <div class="card">
             <b>${i.name}</b> - ₹${i.price}<br>
