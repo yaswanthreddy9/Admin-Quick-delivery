@@ -329,6 +329,59 @@ e.target.style.display="none";
 /* DOM */
 const menu=document.getElementById("menu");
 const overlay=document.getElementById("overlay");
+
+let watchId = null;
+
+function startLiveTracking(orderId){
+
+if(!navigator.geolocation){
+alert("GPS not supported");
+return;
+}
+
+watchId = navigator.geolocation.watchPosition(pos=>{
+
+db.collection("orders").doc(orderId).update({
+location:{
+lat: pos.coords.latitude,
+lng: pos.coords.longitude
+}
+});
+
+}, err=>{
+console.log(err);
+},{
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:5000
+});
+
+}
+
+function stopTracking(){
+if(watchId){
+navigator.geolocation.clearWatch(watchId);
+watchId = null;
+}
+}
+
+function updateStatus(orderId, status){
+
+db.collection("orders").doc(orderId).update({
+status: status
+});
+
+/* START TRACKING */
+if(status === "out for delivery"){
+startLiveTracking(orderId);
+}
+
+/* STOP TRACKING */
+if(status === "delivered" || status === "rejected"){
+stopTracking();
+}
+
+}  
 </script>
 
 </body>
