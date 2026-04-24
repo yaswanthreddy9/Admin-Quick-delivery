@@ -10,15 +10,7 @@ body { margin: 0; font-family: Arial; background: #f5f5f5; }
 header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; }
 
 /* Audio Unlock Banner */
-#unlockBanner {
-    background: #ff9800;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
+#unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 .menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 1000; }
 .menu.open { left: 0; }
@@ -29,35 +21,16 @@ header { background: #111; color: white; padding: 15px; display: flex; gap: 10px
 
 .container { padding: 15px; }
 
-.card {
-    background: white; padding: 15px; margin: 10px 0;
-    border-radius: 10px; cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
+.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
-input {
-    width: 100%; padding: 10px; margin: 5px 0;
-    border-radius: 6px; border: 1px solid #ccc;
-    box-sizing: border-box;
-}
+input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
-button {
-    padding: 10px 15px; border: none; border-radius: 6px;
-    background: #16a34a; color: white; margin: 5px 0; cursor: pointer;
-}
+button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; }
 .edit { background: orange; }
 .delete { background: red; }
 
-.modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none; justify-content: center; align-items: center;
-    z-index: 1001;
-}
-.box {
-    background: white; padding: 20px; border-radius: 10px;
-    width: 90%; max-width: 400px;
-}
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1001; }
+.box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
 select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 </style>
 </head>
@@ -78,12 +51,14 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 <div id="menu" class="menu">
     <div class="menu-header"><h3>Admin</h3></div>
     <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
-    <div class="menu-item" onclick="showDelivery()">🚚 Delivery</div>
-    <div class="menu-item" onclick="showItems()">🍗 Items</div>
+    <div class="menu-item" onclick="showDelivery()">🚚 Delivery Status</div>
+    <div class="menu-item" onclick="showItems()">🍗 Menu Items</div>
+    <div class="menu-item" onclick="showSettings()">⚙️ Payment Settings</div>
     <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
+    
     <div id="dashboardSection">
         <h3>Live Orders</h3>
         <div id="dashboardList"></div>
@@ -95,23 +70,43 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
     </div>
 
     <div id="itemsSection" style="display:none">
-        <h3>Add / Edit Item</h3>
+        <h3>Add / Edit Menu Item</h3>
         <input id="nameInput" placeholder="Item Name">
         <input id="priceInput" type="number" placeholder="Price">
         <input id="imageInput" placeholder="Image URL">
-        <button onclick="saveItem()">Save Item</button>
+        <button onclick="saveItem()" style="width: 100%;">Save Item</button>
 
         <hr style="margin: 20px 0; border: 1px solid #ddd;">
 
-        <h3>Items</h3>
+        <h3>Current Menu Items</h3>
         <div id="itemsList"></div>
     </div>
+
+    <div id="settingsSection" style="display:none">
+        <h3>Payment & QR Settings</h3>
+        <div class="card">
+            
+            <label style="font-weight: bold; color: #333;">1. Enter your UPI ID</label>
+            <input id="adminUpiInput" placeholder="e.g., yourname@bank">
+            
+            <label style="font-weight: bold; color: #333;">2. Upload QR Code Image</label>
+            <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
+            
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #ccebc4; margin-top: 10px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #16a34a;">Currently Live QR Code</p>
+                <img id="currentQrPreview" src="https://via.placeholder.com/150?text=No+QR+Uploaded" style="width: 150px; border-radius: 8px;">
+            </div>
+
+            <button id="saveSettingsBtn" onclick="savePaymentSettings()" style="width: 100%; margin-top: 15px;">💾 Save Payment Settings</button>
+        </div>
+    </div>
+
 </div>
 
 <div id="orderModal" class="modal">
     <div class="box">
-        <h3>Order Details</h3>
-        <div id="orderDetails"></div>
+        <h3 style="margin-top: 0;">Order Details</h3>
+        <div id="orderDetails" style="line-height: 1.6; margin-bottom: 15px;"></div>
 
         <select id="statusSelect">
             <option value="pending">pending</option>
@@ -127,20 +122,24 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
+// IMPORTANT: Add your admin email here
 const ADMIN_EMAIL = "myeswanthreddy321@gmail.com";
 
 const config = {
     apiKey: "AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
     authDomain: "chicken-delivery-app-9e4f6.firebaseapp.com",
-    projectId: "chicken-delivery-app-9e4f6"
+    projectId: "chicken-delivery-app-9e4f6",
+    storageBucket: "chicken-delivery-app-9e4f6.appspot.com" // Added Storage Bucket
 };
 
 firebase.initializeApp(config);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const storage = firebase.storage();
 
 let selectedOrderId = null;
 let editId = null;
@@ -153,48 +152,29 @@ alarmAudio.loop = true;
 let isAudioUnlocked = false;
 let alarmInterval = null;
 
-// Function to safely unlock audio on first click
 function unlockAudio() {
     alarmAudio.play().then(() => {
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
         isAudioUnlocked = true;
         document.getElementById('unlockBanner').style.display = 'none';
-        console.log("Audio Unlocked Successfully");
     }).catch(err => {
-        console.error("Audio unlock failed:", err);
         alert("Could not enable audio. Please check your browser settings.");
     });
 }
 
 function playAlert() {
-    if (alarmInterval) return; // Prevent multiple alarms running at once
-
-    if (!isAudioUnlocked) {
-        alert("🚨 NEW ORDER! (Please click the orange banner at the top to enable sounds)");
-        return;
-    }
-
+    if (alarmInterval) return; 
+    if (!isAudioUnlocked) return;
     alarmAudio.play().catch(()=>{});
-
-    if (navigator.vibrate) {
-        navigator.vibrate([500, 300, 500]);
-    }
-
-    alarmInterval = setInterval(() => {
-        alarmAudio.play().catch(()=>{});
-    }, 3000);
+    if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
+    alarmInterval = setInterval(() => { alarmAudio.play().catch(()=>{}); }, 3000);
 }
 
 function stopAlert() {
-    alarmAudio.pause();
-    alarmAudio.currentTime = 0;
-    if (alarmInterval) {
-        clearInterval(alarmInterval);
-        alarmInterval = null;
-    }
+    alarmAudio.pause(); alarmAudio.currentTime = 0;
+    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
 }
-
 
 /* ================================
    AUTH 
@@ -202,15 +182,12 @@ function stopAlert() {
 auth.onAuthStateChanged(user => {
     if(!user) { login(); return; }
     if(user.email !== ADMIN_EMAIL){
-        alert("Not authorized"); auth.signOut();
+        alert("Not authorized. You are not the admin."); auth.signOut();
     }
 });
 
-function login() {
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-}
+function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 function logout() { auth.signOut(); }
-
 
 /* ================================
    NAVIGATION 
@@ -218,10 +195,68 @@ function logout() { auth.signOut(); }
 function openMenu() { document.getElementById('menu').classList.add("open"); document.getElementById('overlay').style.display = "block"; }
 function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
-function showDashboard() { document.getElementById('dashboardSection').style.display="block"; document.getElementById('deliverySection').style.display="none"; document.getElementById('itemsSection').style.display="none"; closeMenu(); }
-function showDelivery() { document.getElementById('dashboardSection').style.display="none"; document.getElementById('deliverySection').style.display="block"; document.getElementById('itemsSection').style.display="none"; closeMenu(); }
-function showItems() { document.getElementById('dashboardSection').style.display="none"; document.getElementById('deliverySection').style.display="none"; document.getElementById('itemsSection').style.display="block"; closeMenu(); }
+function hideAllSections() {
+    document.getElementById('dashboardSection').style.display = "none";
+    document.getElementById('deliverySection').style.display = "none";
+    document.getElementById('itemsSection').style.display = "none";
+    document.getElementById('settingsSection').style.display = "none";
+}
 
+function showDashboard() { hideAllSections(); document.getElementById('dashboardSection').style.display="block"; closeMenu(); }
+function showDelivery() { hideAllSections(); document.getElementById('deliverySection').style.display="block"; closeMenu(); }
+function showItems() { hideAllSections(); document.getElementById('itemsSection').style.display="block"; closeMenu(); }
+function showSettings() { hideAllSections(); document.getElementById('settingsSection').style.display="block"; closeMenu(); }
+
+/* ================================
+   PAYMENT SETTINGS LOGIC 
+================================ */
+// Load Current Settings
+db.collection("settings").doc("payment").onSnapshot(doc => {
+    if(doc.exists) {
+        let data = doc.data();
+        if(data.upiId) document.getElementById('adminUpiInput').value = data.upiId;
+        if(data.qrUrl) document.getElementById('currentQrPreview').src = data.qrUrl;
+    }
+});
+
+// Save Settings
+async function savePaymentSettings() {
+    let upiId = document.getElementById('adminUpiInput').value.trim();
+    let fileInput = document.getElementById('adminQrInput');
+    let btn = document.getElementById('saveSettingsBtn');
+    
+    if(!upiId) { alert("Please enter your UPI ID"); return; }
+
+    btn.innerText = "Saving & Uploading...";
+    btn.disabled = true;
+
+    try {
+        let updateData = { upiId: upiId };
+
+        // If admin selected a new QR image to upload
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const storageRef = storage.ref();
+            const qrRef = storageRef.child(`admin_settings/qr_code_${Date.now()}_${file.name}`);
+            
+            await qrRef.put(file);
+            updateData.qrUrl = await qrRef.getDownloadURL();
+        }
+
+        // Save to Database
+        await db.collection("settings").doc("payment").set(updateData, {merge: true});
+        
+        alert("✅ Payment Settings Live Updated!");
+        fileInput.value = ""; // Clear file input
+        
+    } catch (e) {
+        console.error("Error saving settings", e);
+        alert("Error saving settings. Ensure your Storage Rules are set correctly.");
+    } finally {
+        btn.innerText = "💾 Save Payment Settings";
+        btn.disabled = false;
+    }
+}
 
 /* ================================
    LOAD ORDERS 
@@ -235,28 +270,30 @@ db.collection("orders")
     document.getElementById('dashboardList').innerHTML = "";
     document.getElementById('deliveryList').innerHTML = "";
 
-    /* DETECT ONLY NEW ORDERS */
     snapshot.docChanges().forEach(change => {
-        if(change.type === "added" && initialLoadDone) {
-            playAlert();
-        }
+        if(change.type === "added" && initialLoadDone) { playAlert(); }
     });
 
-    /* BUILD UI */
     snapshot.forEach(doc => {
         let o = doc.data();
+        
+        // Show Payment Status and Screenshot Link if Paid Online
+        let paymentInfo = `<b>Payment:</b> ${o.payment}`;
+        if (o.payment === "ONLINE" && o.paymentScreenshot) {
+            paymentInfo += ` <br><a href="${o.paymentScreenshot}" target="_blank" style="color: blue; font-weight: bold; text-decoration: underline;">📸 View Screenshot</a>`;
+        }
 
         let html = `
         <div class="card" onclick="openOrder('${doc.id}')">
-            <b>Order:</b> ${doc.id.slice(0,6)}<br>
-            <b>Status:</b> <span style="color: ${o.status === 'pending' ? 'red' : 'green'}">${o.status}</span>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <b>Order: #${doc.id.slice(0,6).toUpperCase()}</b>
+                <span style="color: ${o.status === 'pending' ? 'red' : 'green'}; font-weight:bold;">${o.status}</span>
+            </div>
+            ${paymentInfo}
         </div>`;
 
         document.getElementById('dashboardList').innerHTML += html;
-
-        if(o.status === "out for delivery"){
-            document.getElementById('deliveryList').innerHTML += html;
-        }
+        if(o.status === "out for delivery"){ document.getElementById('deliveryList').innerHTML += html; }
     });
 
     initialLoadDone = true;
@@ -267,19 +304,24 @@ db.collection("orders")
    ORDER MANAGEMENT 
 ================================ */
 function openOrder(id) {
-    // Stop the alarm when the admin clicks an order
     stopAlert();
-
     selectedOrderId = id;
 
     db.collection("orders").doc(id).get().then(doc => {
         let o = doc.data();
+        
+        let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
+        if (o.payment === "ONLINE" && o.paymentScreenshot) {
+            paymentHTML += `<br><img src="${o.paymentScreenshot}" style="width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #ccc;">`;
+        }
 
         document.getElementById('orderDetails').innerHTML = `
-            <p><b>User:</b> ${o.userName || "User"}</p>
-            <p><b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}</p>
+            <p><b>Customer:</b> ${o.userName || "Guest"}</p>
+            <p><b>Items:</b> ${o.items ? o.items.map(i=>`${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
+            <hr>
+            <p style="font-size: 18px; color: #16a34a;"><b>Total: ₹${o.total}</b></p>
             <p><b>Address:</b> ${o.address}</p>
-            <p><b>Payment:</b> ${o.payment}</p>
+            <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 10px;">${paymentHTML}</div>
         `;
 
         document.getElementById('statusSelect').value = o.status;
@@ -289,24 +331,11 @@ function openOrder(id) {
 
 function updateStatus() {
     let status = document.getElementById('statusSelect').value;
-
-    db.collection("orders").doc(selectedOrderId).update({
-        status: status
-    });
-
-    if(status === "out for delivery"){
-        startLiveTracking(selectedOrderId);
-    }
-    if(status === "delivered"){
-        stopTracking();
-    }
-
+    db.collection("orders").doc(selectedOrderId).update({ status: status });
     closeModal();
 }
 
-function closeModal() {
-    document.getElementById('orderModal').style.display = "none";
-}
+function closeModal() { document.getElementById('orderModal').style.display = "none"; }
 
 
 /* ================================
@@ -318,7 +347,6 @@ function saveItem() {
     let image = document.getElementById('imageInput').value;
 
     if(!name || !price) { alert("Fill all fields"); return; }
-
     let data = { name, price: Number(price), image };
 
     if(editId) {
@@ -341,7 +369,7 @@ db.collection("items").onSnapshot(snap => {
         document.getElementById('itemsList').innerHTML += `
         <div class="card">
             <b>${i.name}</b> - ₹${i.price}<br>
-            <img src="${i.image}" style="width: 100%; border-radius: 6px; margin-top: 10px;">
+            <img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;">
             <br><br>
             <button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
             <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
@@ -354,37 +382,12 @@ function editItem(id, n, p, img) {
     document.getElementById('nameInput').value = n;
     document.getElementById('priceInput').value = p;
     document.getElementById('imageInput').value = img;
-    showItems(); // Ensure we are on the items tab to see the edit fields
+    window.scrollTo(0, 0);
 }
 
 function deleteItem(id) {
     if(confirm("Are you sure you want to delete this item?")) {
         db.collection("items").doc(id).delete();
-    }
-}
-
-
-/* ================================
-   GPS TRACKING 
-================================ */
-let watchId = null;
-
-function startLiveTracking(orderId) {
-    if ("geolocation" in navigator) {
-        watchId = navigator.geolocation.watchPosition(pos => {
-            db.collection("orders").doc(orderId).update({
-                location: { lat: pos.coords.latitude, lng: pos.coords.longitude }
-            });
-        });
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-}
-
-function stopTracking() {
-    if(watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
     }
 }
 </script>
