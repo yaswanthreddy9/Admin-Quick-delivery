@@ -119,7 +119,7 @@ Admin Panel
 </div>
 
 <!-- ORDER MODAL -->
-status: status.toLowerCase().trim()   
+  
 <div id="orderModal" class="modal">
 <div class="box">
 <h3>Order Details</h3>
@@ -268,8 +268,7 @@ function updateStatus(){
 let status = statusSelect.value;
 
 db.collection("orders").doc(selectedOrderId).update({
-status: status
-});
+status: status.toLowerCase().trim()});
 
 /* START TRACKING */
 if(status === "out for delivery"){
