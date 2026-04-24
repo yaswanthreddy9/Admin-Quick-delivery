@@ -246,13 +246,13 @@ let o=doc.data();
 if(o.createdAt){
 let t = o.createdAt.toMillis();
 
-/* FIRST LOAD: JUST SET MAX TIME */
 if(firstLoad){
-if(t > lastOrderTime) lastOrderTime = t;
+  if(t > lastOrderTime) lastOrderTime = t;
 }else{
-if(t > lastOrderTime){
-lastOrderTime = t;
-playAlert();
+  if(t > lastOrderTime){
+    lastOrderTime = t;
+    playAlert();
+  }
 }
 }
 
