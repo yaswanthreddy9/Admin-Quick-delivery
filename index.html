@@ -236,18 +236,19 @@ dashboardList.innerHTML="";
 deliveryList.innerHTML="";
 
 snap.forEach(doc=>{
+initialized = true;  
 let o=doc.data();
 
-/* ALERT */
-if(o.createdAt){
+/* ALERT */if(o.createdAt){
 let t = o.createdAt.toMillis();
 
-/* ONLY TRIGGER FOR NEW ORDER */
-if(lastOrderTime && t > lastOrderTime){
+/* ONLY AFTER FIRST LOAD */
+if(initialized && lastOrderTime && t > lastOrderTime){
 console.log("New order detected");
 playAlert();
 }
 
+/* TRACK LATEST */
 if(!lastOrderTime || t > lastOrderTime){
 lastOrderTime = t;
 }
@@ -427,11 +428,11 @@ watchId = null;
 // });
 // }  
 
-document.body.addEventListener("click", ()=>{
-if(alarmAudio){
-alarmAudio.play();
-}
-});
+// document.body.addEventListener("click", ()=>{
+// if(alarmAudio){
+// alarmAudio.play();
+// }
+// });
 
 document.body.addEventListener("click", ()=>{
 let audio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
