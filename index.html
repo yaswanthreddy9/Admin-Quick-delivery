@@ -127,9 +127,6 @@ const auth=firebase.auth();
 let selectedOrderId=null;
 let editId=null;
 
-let lastOrderTime = 0;
-let firstLoad = true;
-
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(!user){login();return;}
@@ -155,6 +152,7 @@ function showItems(){dashboardSection.style.display="none";deliverySection.style
 /* 🔊 ALERT SYSTEM */
 let alarmAudio=null;
 let alarmInterval=null;
+let initialLoadDone=false;
 
 function playAlert(){
 if(alarmInterval) return;
@@ -162,41 +160,42 @@ if(alarmInterval) return;
 alarmAudio=new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
 alarmAudio.loop=true;
 alarmAudio.volume=1;
+
 alarmAudio.play().catch(()=>{});
 
 if(navigator.vibrate){
-navigator.vibrate([500,300,500,300,500]);
+navigator.vibrate([500,300,500]);
 }
 
 alarmInterval=setInterval(()=>{
-if(alarmAudio) alarmAudio.play().catch(()=>{});
+if(alarmAudio){
+alarmAudio.play().catch(()=>{});
+}
 },3000);
 
 alert("New Order!");
 }
 
-/* LOAD ORDERS */
+/* LOAD ORDERS (ZERO MISS LOGIC) */
 db.collection("orders")
 .orderBy("createdAt","desc")
-.onSnapshot(snap=>{
+.onSnapshot(snapshot=>{
 
 dashboardList.innerHTML="";
 deliveryList.innerHTML="";
 
-snap.forEach(doc=>{
-let o=doc.data();
-
-if(o.createdAt){
-let t=o.createdAt.toMillis();
-
-if(firstLoad){
-if(t>lastOrderTime) lastOrderTime=t;
-}
-else if(t>lastOrderTime){
-lastOrderTime=t;
+/* DETECT ONLY NEW ORDERS */
+snapshot.docChanges().forEach(change=>{
+if(change.type==="added"){
+if(initialLoadDone){
 playAlert();
 }
 }
+});
+
+/* BUILD UI */
+snapshot.forEach(doc=>{
+let o=doc.data();
 
 let html=`
 <div class="card" onclick="openOrder('${doc.id}')">
@@ -211,7 +210,7 @@ deliveryList.innerHTML+=html;
 }
 });
 
-firstLoad=false;
+initialLoadDone=true;
 });
 
 /* OPEN ORDER */
@@ -330,7 +329,8 @@ watchId=null;
 
 /* AUDIO UNLOCK */
 document.body.addEventListener("click",()=>{
-new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play().catch(()=>{});
+new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg")
+.play().catch(()=>{});
 });
 
 </script>
