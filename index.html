@@ -6,105 +6,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f5f5}
-header{background:#111;color:white;padding:15px;display:flex;gap:10px}
+body { margin: 0; font-family: Arial; background: #f5f5f5; }
+header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; }
 
-.menu{position:fixed;left:-260px;top:0;width:260px;height:100%;
-background:white;transition:0.3s;z-index:1000;}
-.menu.open{left:0}
-
-.menu-header{background:#111;color:white;padding:20px;}
-.menu-item{padding:15px;border-bottom:1px solid #eee;cursor:pointer;}
-
-#overlay{position:fixed;width:100%;height:100%;
-background:rgba(0,0,0,0.4);display:none;}
-
-.container{padding:15px}
-
-.card{
-background:white;padding:15px;margin:10px 0;
-border-radius:10px;cursor:pointer;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+/* Audio Unlock Banner */
+#unlockBanner {
+    background: #ff9800;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-input{
-width:100%;padding:10px;margin:5px 0;
-border-radius:6px;border:1px solid #ccc;
+.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 1000; }
+.menu.open { left: 0; }
+.menu-header { background: #111; color: white; padding: 20px; }
+.menu-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+
+#overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 999; }
+
+.container { padding: 15px; }
+
+.card {
+    background: white; padding: 15px; margin: 10px 0;
+    border-radius: 10px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-button{
-padding:8px;border:none;border-radius:6px;
-background:#16a34a;color:white;margin:3px;cursor:pointer;
+input {
+    width: 100%; padding: 10px; margin: 5px 0;
+    border-radius: 6px; border: 1px solid #ccc;
+    box-sizing: border-box;
 }
-.edit{background:orange}
-.delete{background:red}
 
-.modal{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.5);
-display:none;justify-content:center;align-items:center;
+button {
+    padding: 10px 15px; border: none; border-radius: 6px;
+    background: #16a34a; color: white; margin: 5px 0; cursor: pointer;
 }
-.box{
-background:white;padding:20px;border-radius:10px;
-width:90%;max-width:400px;
+.edit { background: orange; }
+.delete { background: red; }
+
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none; justify-content: center; align-items: center;
+    z-index: 1001;
 }
+.box {
+    background: white; padding: 20px; border-radius: 10px;
+    width: 90%; max-width: 400px;
+}
+select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 </style>
 </head>
 
 <body>
 
+<div id="unlockBanner" onclick="unlockAudio()">
+    🔔 Click here to Enable Audio Alerts for New Orders
+</div>
+
 <header>
-<span onclick="openMenu()">☰</span>
-Admin Panel
+    <span style="font-size: 20px; cursor: pointer;" onclick="openMenu()">☰</span>
+    <b>Admin Panel</b>
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
 
 <div id="menu" class="menu">
-<div class="menu-header"><h3>Admin</h3></div>
-<div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
-<div class="menu-item" onclick="showDelivery()">🚚 Delivery</div>
-<div class="menu-item" onclick="showItems()">🍗 Items</div>
-<div class="menu-item" onclick="logout()">🚪 Logout</div>
+    <div class="menu-header"><h3>Admin</h3></div>
+    <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
+    <div class="menu-item" onclick="showDelivery()">🚚 Delivery</div>
+    <div class="menu-item" onclick="showItems()">🍗 Items</div>
+    <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
-<div id="dashboardSection">
-<h3>Live Orders</h3>
-<div id="dashboardList"></div>
-</div>
+    <div id="dashboardSection">
+        <h3>Live Orders</h3>
+        <div id="dashboardList"></div>
+    </div>
 
-<div id="deliverySection" style="display:none">
-<h3>Out for Delivery</h3>
-<div id="deliveryList"></div>
-</div>
+    <div id="deliverySection" style="display:none">
+        <h3>Out for Delivery</h3>
+        <div id="deliveryList"></div>
+    </div>
 
-<div id="itemsSection" style="display:none">
-<h3>Add / Edit Item</h3>
-<input id="nameInput" placeholder="Item Name">
-<input id="priceInput" type="number" placeholder="Price">
-<input id="imageInput" placeholder="Image URL">
-<button onclick="saveItem()">Save Item</button>
+    <div id="itemsSection" style="display:none">
+        <h3>Add / Edit Item</h3>
+        <input id="nameInput" placeholder="Item Name">
+        <input id="priceInput" type="number" placeholder="Price">
+        <input id="imageInput" placeholder="Image URL">
+        <button onclick="saveItem()">Save Item</button>
 
-<h3>Items</h3>
-<div id="itemsList"></div>
-</div>
+        <hr style="margin: 20px 0; border: 1px solid #ddd;">
+
+        <h3>Items</h3>
+        <div id="itemsList"></div>
+    </div>
 </div>
 
 <div id="orderModal" class="modal">
-<div class="box">
-<h3>Order Details</h3>
-<div id="orderDetails"></div>
+    <div class="box">
+        <h3>Order Details</h3>
+        <div id="orderDetails"></div>
 
-<select id="statusSelect">
-<option>pending</option>
-<option>preparing</option>
-<option>out for delivery</option>
-<option>delivered</option>
-</select>
+        <select id="statusSelect">
+            <option value="pending">pending</option>
+            <option value="preparing">preparing</option>
+            <option value="out for delivery">out for delivery</option>
+            <option value="delivered">delivered</option>
+        </select>
 
-<button onclick="updateStatus()">Update Status</button>
-</div>
+        <button style="width: 100%;" onclick="updateStatus()">Update Status</button>
+        <button style="width: 100%; background: #ccc; color: #333;" onclick="closeModal()">Cancel</button>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -112,227 +130,263 @@ Admin Panel
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-const ADMIN_EMAIL="myeswanthreddy321@gmail.com";
+const ADMIN_EMAIL = "myeswanthreddy321@gmail.com";
 
-const config={
-apiKey:"AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
-authDomain:"chicken-delivery-app-9e4f6.firebaseapp.com",
-projectId:"chicken-delivery-app-9e4f6"
+const config = {
+    apiKey: "AIzaSyD7fBeJ4cV82_7OaWltZ8DDvEr-Y9B_mZA",
+    authDomain: "chicken-delivery-app-9e4f6.firebaseapp.com",
+    projectId: "chicken-delivery-app-9e4f6"
 };
 
 firebase.initializeApp(config);
-const db=firebase.firestore();
-const auth=firebase.auth();
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-let selectedOrderId=null;
-let editId=null;
+let selectedOrderId = null;
+let editId = null;
 
-/* AUTH */
-auth.onAuthStateChanged(user=>{
-if(!user){login();return;}
-if(user.email!==ADMIN_EMAIL){
-alert("Not authorized");auth.signOut();
+/* ================================
+   AUDIO & ALERT SYSTEM 
+================================ */
+let alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+alarmAudio.loop = true;
+let isAudioUnlocked = false;
+let alarmInterval = null;
+
+// Function to safely unlock audio on first click
+function unlockAudio() {
+    alarmAudio.play().then(() => {
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
+        isAudioUnlocked = true;
+        document.getElementById('unlockBanner').style.display = 'none';
+        console.log("Audio Unlocked Successfully");
+    }).catch(err => {
+        console.error("Audio unlock failed:", err);
+        alert("Could not enable audio. Please check your browser settings.");
+    });
 }
+
+function playAlert() {
+    if (alarmInterval) return; // Prevent multiple alarms running at once
+
+    if (!isAudioUnlocked) {
+        alert("🚨 NEW ORDER! (Please click the orange banner at the top to enable sounds)");
+        return;
+    }
+
+    alarmAudio.play().catch(()=>{});
+
+    if (navigator.vibrate) {
+        navigator.vibrate([500, 300, 500]);
+    }
+
+    alarmInterval = setInterval(() => {
+        alarmAudio.play().catch(()=>{});
+    }, 3000);
+}
+
+function stopAlert() {
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+    if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+    }
+}
+
+
+/* ================================
+   AUTH 
+================================ */
+auth.onAuthStateChanged(user => {
+    if(!user) { login(); return; }
+    if(user.email !== ADMIN_EMAIL){
+        alert("Not authorized"); auth.signOut();
+    }
 });
 
-function login(){
-auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+function login() {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 }
-function logout(){auth.signOut();}
+function logout() { auth.signOut(); }
 
-/* MENU */
-function openMenu(){menu.classList.add("open");overlay.style.display="block";}
-function closeMenu(){menu.classList.remove("open");overlay.style.display="none";}
 
-/* NAV */
-function showDashboard(){dashboardSection.style.display="block";deliverySection.style.display="none";itemsSection.style.display="none";closeMenu();}
-function showDelivery(){dashboardSection.style.display="none";deliverySection.style.display="block";itemsSection.style.display="none";closeMenu();}
-function showItems(){dashboardSection.style.display="none";deliverySection.style.display="none";itemsSection.style.display="block";closeMenu();}
+/* ================================
+   NAVIGATION 
+================================ */
+function openMenu() { document.getElementById('menu').classList.add("open"); document.getElementById('overlay').style.display = "block"; }
+function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
-/* 🔊 ALERT SYSTEM */
-let alarmAudio=null;
-let alarmInterval=null;
-let initialLoadDone=false;
+function showDashboard() { document.getElementById('dashboardSection').style.display="block"; document.getElementById('deliverySection').style.display="none"; document.getElementById('itemsSection').style.display="none"; closeMenu(); }
+function showDelivery() { document.getElementById('dashboardSection').style.display="none"; document.getElementById('deliverySection').style.display="block"; document.getElementById('itemsSection').style.display="none"; closeMenu(); }
+function showItems() { document.getElementById('dashboardSection').style.display="none"; document.getElementById('deliverySection').style.display="none"; document.getElementById('itemsSection').style.display="block"; closeMenu(); }
 
-function playAlert(){
-if(alarmInterval) return;
 
-alarmAudio=new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
-alarmAudio.loop=true;
-alarmAudio.volume=1;
+/* ================================
+   LOAD ORDERS 
+================================ */
+let initialLoadDone = false;
 
-alarmAudio.play().catch(()=>{});
-
-if(navigator.vibrate){
-navigator.vibrate([500,300,500]);
-}
-
-alarmInterval=setInterval(()=>{
-if(alarmAudio){
-alarmAudio.play().catch(()=>{});
-}
-},3000);
-
-alert("New Order!");
-}
-
-/* LOAD ORDERS (ZERO MISS LOGIC) */
 db.collection("orders")
-.orderBy("createdAt","desc")
-.onSnapshot(snapshot=>{
+  .orderBy("createdAt", "desc")
+  .onSnapshot(snapshot => {
 
-dashboardList.innerHTML="";
-deliveryList.innerHTML="";
+    document.getElementById('dashboardList').innerHTML = "";
+    document.getElementById('deliveryList').innerHTML = "";
 
-/* DETECT ONLY NEW ORDERS */
-snapshot.docChanges().forEach(change=>{
-if(change.type==="added"){
-if(initialLoadDone){
-playAlert();
-}
-}
+    /* DETECT ONLY NEW ORDERS */
+    snapshot.docChanges().forEach(change => {
+        if(change.type === "added" && initialLoadDone) {
+            playAlert();
+        }
+    });
+
+    /* BUILD UI */
+    snapshot.forEach(doc => {
+        let o = doc.data();
+
+        let html = `
+        <div class="card" onclick="openOrder('${doc.id}')">
+            <b>Order:</b> ${doc.id.slice(0,6)}<br>
+            <b>Status:</b> <span style="color: ${o.status === 'pending' ? 'red' : 'green'}">${o.status}</span>
+        </div>`;
+
+        document.getElementById('dashboardList').innerHTML += html;
+
+        if(o.status === "out for delivery"){
+            document.getElementById('deliveryList').innerHTML += html;
+        }
+    });
+
+    initialLoadDone = true;
 });
 
-/* BUILD UI */
-snapshot.forEach(doc=>{
-let o=doc.data();
 
-let html=`
-<div class="card" onclick="openOrder('${doc.id}')">
-<b>Order:</b> ${doc.id.slice(0,6)}<br>
-<b>Status:</b> ${o.status}
-</div>`;
+/* ================================
+   ORDER MANAGEMENT 
+================================ */
+function openOrder(id) {
+    // Stop the alarm when the admin clicks an order
+    stopAlert();
 
-dashboardList.innerHTML+=html;
+    selectedOrderId = id;
 
-if(o.status==="out for delivery"){
-deliveryList.innerHTML+=html;
+    db.collection("orders").doc(id).get().then(doc => {
+        let o = doc.data();
+
+        document.getElementById('orderDetails').innerHTML = `
+            <p><b>User:</b> ${o.userName || "User"}</p>
+            <p><b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}</p>
+            <p><b>Address:</b> ${o.address}</p>
+            <p><b>Payment:</b> ${o.payment}</p>
+        `;
+
+        document.getElementById('statusSelect').value = o.status;
+        document.getElementById('orderModal').style.display = "flex";
+    });
 }
+
+function updateStatus() {
+    let status = document.getElementById('statusSelect').value;
+
+    db.collection("orders").doc(selectedOrderId).update({
+        status: status
+    });
+
+    if(status === "out for delivery"){
+        startLiveTracking(selectedOrderId);
+    }
+    if(status === "delivered"){
+        stopTracking();
+    }
+
+    closeModal();
+}
+
+function closeModal() {
+    document.getElementById('orderModal').style.display = "none";
+}
+
+
+/* ================================
+   ITEMS MANAGEMENT
+================================ */
+function saveItem() {
+    let name = document.getElementById('nameInput').value;
+    let price = document.getElementById('priceInput').value;
+    let image = document.getElementById('imageInput').value;
+
+    if(!name || !price) { alert("Fill all fields"); return; }
+
+    let data = { name, price: Number(price), image };
+
+    if(editId) {
+        db.collection("items").doc(editId).update(data);
+        editId = null;
+    } else {
+        db.collection("items").add(data);
+    }
+
+    document.getElementById('nameInput').value = "";
+    document.getElementById('priceInput').value = "";
+    document.getElementById('imageInput').value = "";
+}
+
+db.collection("items").onSnapshot(snap => {
+    document.getElementById('itemsList').innerHTML = "";
+    snap.forEach(doc => {
+        let i = doc.data();
+
+        document.getElementById('itemsList').innerHTML += `
+        <div class="card">
+            <b>${i.name}</b> - ₹${i.price}<br>
+            <img src="${i.image}" style="width: 100%; border-radius: 6px; margin-top: 10px;">
+            <br><br>
+            <button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
+            <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
+        </div>`;
+    });
 });
 
-initialLoadDone=true;
-});
-
-/* OPEN ORDER */
-function openOrder(id){
-
-if(alarmAudio){
-alarmAudio.pause();
-alarmAudio.currentTime=0;
-alarmAudio=null;
-}
-if(alarmInterval){
-clearInterval(alarmInterval);
-alarmInterval=null;
+function editItem(id, n, p, img) {
+    editId = id;
+    document.getElementById('nameInput').value = n;
+    document.getElementById('priceInput').value = p;
+    document.getElementById('imageInput').value = img;
+    showItems(); // Ensure we are on the items tab to see the edit fields
 }
 
-selectedOrderId=id;
-
-db.collection("orders").doc(id).get().then(doc=>{
-let o=doc.data();
-
-orderDetails.innerHTML=`
-<b>User:</b> ${o.userName || "User"}<br>
-<b>Items:</b> ${o.items ? o.items.map(i=>i.name).join(", ") : "No items"}<br>
-<b>Address:</b> ${o.address}<br>
-<b>Payment:</b> ${o.payment}
-`;
-
-statusSelect.value=o.status;
-orderModal.style.display="flex";
-});
+function deleteItem(id) {
+    if(confirm("Are you sure you want to delete this item?")) {
+        db.collection("items").doc(id).delete();
+    }
 }
 
-/* UPDATE STATUS */
-function updateStatus(){
-let status=statusSelect.value;
 
-db.collection("orders").doc(selectedOrderId).update({
-status:status
-});
+/* ================================
+   GPS TRACKING 
+================================ */
+let watchId = null;
 
-if(status==="out for delivery"){
-startLiveTracking(selectedOrderId);
-}
-if(status==="delivered"){
-stopTracking();
-}
-
-orderModal.style.display="none";
-}
-
-/* ITEMS */
-function saveItem(){
-let name=nameInput.value;
-let price=priceInput.value;
-let image=imageInput.value;
-
-if(!name||!price){alert("Fill all fields");return;}
-
-let data={name,price:Number(price),image};
-
-if(editId){
-db.collection("items").doc(editId).update(data);
-editId=null;
-}else{
-db.collection("items").add(data);
+function startLiveTracking(orderId) {
+    if ("geolocation" in navigator) {
+        watchId = navigator.geolocation.watchPosition(pos => {
+            db.collection("orders").doc(orderId).update({
+                location: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+            });
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
 }
 
-nameInput.value="";
-priceInput.value="";
-imageInput.value="";
+function stopTracking() {
+    if(watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
 }
-
-db.collection("items").onSnapshot(snap=>{
-itemsList.innerHTML="";
-snap.forEach(doc=>{
-let i=doc.data();
-
-itemsList.innerHTML+=`
-<div class="card">
-<b>${i.name}</b> - ₹${i.price}<br>
-<img src="${i.image}" width="100%">
-<br>
-<button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
-<button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
-</div>`;
-});
-});
-
-function editItem(id,n,p,img){
-editId=id;
-nameInput.value=n;
-priceInput.value=p;
-imageInput.value=img;
-}
-function deleteItem(id){
-if(confirm("Delete?")) db.collection("items").doc(id).delete();
-}
-
-/* TRACKING */
-let watchId=null;
-
-function startLiveTracking(orderId){
-watchId=navigator.geolocation.watchPosition(pos=>{
-db.collection("orders").doc(orderId).update({
-location:{lat:pos.coords.latitude,lng:pos.coords.longitude}
-});
-});
-}
-
-function stopTracking(){
-if(watchId){
-navigator.geolocation.clearWatch(watchId);
-watchId=null;
-}
-}
-
-/* AUDIO UNLOCK */
-document.body.addEventListener("click",()=>{
-new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg")
-.play().catch(()=>{});
-});
-
 </script>
 
 </body>
