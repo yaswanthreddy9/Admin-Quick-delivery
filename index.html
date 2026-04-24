@@ -198,10 +198,35 @@ closeMenu();
 }
 
 /* 🔔 ALERT */
+let alarmAudio = null;
+let alarmInterval = null;
+
 function playAlert(){
-const audio=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-audio.play();
-alert("New Order!");
+
+/* PREVENT MULTIPLE */
+if(alarmInterval) return;
+
+/* LOUD SOUND */
+alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+alarmAudio.loop = true;
+alarmAudio.volume = 1;
+
+/* TRY PLAY */
+alarmAudio.play().catch(()=>{
+console.log("Click screen once to enable sound");
+});
+
+/* VIBRATION */
+if(navigator.vibrate){
+navigator.vibrate([500,300,500,300,500]);
+}
+
+/* KEEP PLAYING (backup) */
+alarmInterval = setInterval(()=>{
+if(alarmAudio){
+alarmAudio.play().catch(()=>{});
+}
+}, 3000);
 }
 
 /* LOAD ORDERS */
@@ -245,6 +270,18 @@ deliveryList.innerHTML+=html;
 
 /* OPEN ORDER */
 function openOrder(id){
+
+/* STOP SOUND */
+if(alarmAudio){
+alarmAudio.pause();
+alarmAudio.currentTime = 0;
+alarmAudio = null;
+}
+if(alarmInterval){
+clearInterval(alarmInterval);
+alarmInterval = null;
+}
+
 selectedOrderId=id;
 
 db.collection("orders").doc(id).get().then(doc=>{
@@ -381,14 +418,17 @@ watchId = null;
 }
 }
 
-if(status === "out for delivery"){
-startLiveTracking(selectedOrderId);
+// if(status === "out for delivery"){
+// startLiveTracking(selectedOrderId);
 
-db.collection("orders").doc(selectedOrderId).update({
-location: null
+// db.collection("orders").doc(selectedOrderId).update({
+// location: null
+// });
+// }  
+document.body.addEventListener("click", ()=>{
+let audio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+audio.play().catch(()=>{});
 });
-}  
-
 
 </script>
 
