@@ -2,53 +2,60 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
+<title>Admin Panel - Master Dispatch</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body { margin: 0; font-family: Arial; background: #f5f5f5; }
-header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; }
+header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3);}
 
 /* Audio & Notification Unlock Banner */
 #unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 1000; }
+.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 10000; }
 .menu.open { left: 0; }
 .menu-header { background: #111; color: white; padding: 20px; }
-.menu-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+.menu-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #333;}
+.menu-item:hover { background: #f9f9f9; }
 
-#overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 999; }
+#overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 9999; }
 
-.container { padding: 15px; }
+.container { padding: 15px; padding-bottom: 100px; }
 
-.card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
+.card { background: white; padding: 18px; margin: 12px 0; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); position: relative; border: 1px solid #eaeaea;}
+.card-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px;}
 
-input[type="text"], input[type="number"], input[type="file"], textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-family: Arial; }
+input[type="text"], input[type="number"], input[type="file"], textarea, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-family: Arial; font-size: 14px;}
 
-button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; }
-.edit { background: orange; }
-.delete { background: red; }
+button { padding: 12px 15px; border: none; border-radius: 8px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s;}
+button:hover { opacity: 0.9; }
+.edit { background: #f59e0b; }
+.delete { background: #dc2626; }
 
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1001; }
-.box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
-select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10001; }
+.box { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;}
 
 /* Call Button */
-.btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; }
+.btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; text-align: center; }
 
 /* IOS Style Toggles */
 .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
 .setting-row:last-child { border-bottom: none; }
-.switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; }
+.switch { position: relative; display: inline-block; width: 54px; height: 30px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #a3a3a3; transition: .4s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+.slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 input:checked + .slider { background-color: #16a34a; }
-input:checked + .slider:before { transform: translateX(26px); }
+input:checked + .slider:before { transform: translateX(24px); }
 
-/* Color Pickers */
 .color-picker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; border-radius: 5px; cursor: pointer; }
+
+/* Driver Badges */
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; }
+.badge-online { background: #16a34a; }
+.badge-offline { background: #666; }
+.badge-suspended { background: #dc2626; }
 </style>
 </head>
 
@@ -59,53 +66,60 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 </div>
 
 <header>
-    <span style="font-size: 20px; cursor: pointer;" onclick="openMenu()">☰</span>
-    <b>Admin Panel</b>
+    <span style="font-size: 22px; cursor: pointer;" onclick="openMenu()">☰</span>
+    <b>Admin Dispatch Panel</b>
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
 
 <div id="menu" class="menu">
-    <div class="menu-header"><h3>Admin</h3></div>
-    <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
-    <div class="menu-item" onclick="showDelivery()">🚚 Delivery Status</div>
-    <div class="menu-item" onclick="showItems()">🍗 Menu Items</div>
-    <div class="menu-item" onclick="showSettings()">⚙️ Store & Settings</div>
+    <div class="menu-header"><h3>Control Center</h3></div>
+    <div class="menu-item" onclick="showSection('dashboardSection')">📊 Live Dashboard</div>
+    <div class="menu-item" onclick="showSection('dispatchSection')">👨‍✈️ Delivery Partners</div>
+    <div class="menu-item" onclick="showSection('itemsSection')">🍗 Menu Items</div>
+    <div class="menu-item" onclick="showSection('settingsSection')">⚙️ Store Settings</div>
     <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
 <div class="container">
     
     <div id="dashboardSection">
-        <h3>Live Orders</h3>
+        <h3 style="color:#333; margin-top:0;">Live Orders</h3>
         <div id="dashboardList"></div>
     </div>
 
-    <div id="deliverySection" style="display:none">
-        <h3>Out for Delivery</h3>
-        <div id="deliveryList"></div>
+    <div id="dispatchSection" style="display:none">
+        <h3 style="color:#333; margin-top:0;">Delivery Partners Fleet</h3>
+        <p style="font-size: 14px; color: #666; margin-top:-10px;">Monitor and manage your registered drivers.</p>
+        <div id="partnersList"></div>
     </div>
 
     <div id="itemsSection" style="display:none">
-        <h3>Add / Edit Menu Item</h3>
-        <input type="text" id="nameInput" placeholder="Item Name *">
-        <input type="number" id="priceInput" placeholder="Price *">
-        <input type="text" id="imageInput" placeholder="Image URL *">
-        <textarea id="descInput" rows="2" placeholder="Item Description (Optional)"></textarea>
-        <button onclick="saveItem()" style="width: 100%;">Save Item</button>
+        <h3 style="color:#333; margin-top:0;">Add / Edit Menu Item</h3>
+        <div class="card">
+            <input type="text" id="nameInput" placeholder="Item Name *">
+            <input type="number" id="priceInput" placeholder="Price *">
+            <input type="text" id="imageInput" placeholder="Image URL *">
+            <textarea id="descInput" rows="2" placeholder="Item Description (Optional)"></textarea>
+            <button onclick="saveItem()" style="width: 100%;">Save Item</button>
+        </div>
 
-        <hr style="margin: 20px 0; border: 1px solid #ddd;">
-        <h3>Current Menu Items</h3>
+        <hr style="margin: 25px 0; border: 1px solid #ddd;">
+        <h3 style="color:#333;">Current Menu Items</h3>
         <div id="itemsList"></div>
     </div>
 
     <div id="settingsSection" style="display:none">
         
-        <h3 style="margin-top: 0;">Master Power Controls</h3>
+        <h3 style="color:#333; margin-top:0;">Master Power Controls</h3>
         <div class="card" style="cursor: default;">
             <div class="setting-row">
                 <div><b style="font-size: 16px;">Store Status</b><div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div></div>
                 <label class="switch"><input type="checkbox" id="toggleStore" onchange="updateStoreSettings()"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <div><b style="font-size: 16px;">Auto-Assign Drivers</b><div style="font-size: 13px; color: #666;">System assigns closest driver automatically</div></div>
+                <label class="switch"><input type="checkbox" id="toggleAutoAssign" onchange="updateStoreSettings()"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
                 <div><b style="font-size: 16px;">Allow COD</b><div style="font-size: 13px; color: #666;">Accept Cash on Delivery</div></div>
@@ -117,9 +131,21 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
             </div>
         </div>
 
-        <h3 style="margin-top: 25px;">Live Announcement Banner</h3>
+        <h3 style="color:#333; margin-top: 25px;">Promotional Flash Popup</h3>
         <div class="card" style="cursor: default;">
-            <label style="font-weight: bold; color: #333;">Announcement Text</label>
+            <div class="setting-row" style="border-bottom: none; padding-top: 0;">
+                <div><b style="font-size: 16px;">Enable Promo Popup</b><div style="font-size: 13px; color: #666;">Shows on customer app launch</div></div>
+                <label class="switch"><input type="checkbox" id="togglePromo" onchange="updateStoreSettings()"><span class="slider"></span></label>
+            </div>
+            <label style="font-weight: bold; color: #333; font-size: 14px; margin-top: 10px; display:block;">Upload Promo Image (Poster)</label>
+            <input type="file" id="promoImageInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
+            <button id="savePromoBtn" onclick="uploadPromoImage()" style="width: 100%; background: #8b5cf6; margin-bottom: 10px;">✨ Upload & Set Promo</button>
+            <img id="promoPreview" style="width: 100%; border-radius: 8px; display: none; margin-top: 10px;">
+        </div>
+
+        <h3 style="color:#333; margin-top: 25px;">Live Announcement Banner</h3>
+        <div class="card" style="cursor: default;">
+            <label style="font-weight: bold; color: #333; font-size: 14px;">Announcement Text</label>
             <input type="text" id="announceText" placeholder="e.g. USE CODE FLAT50 FOR OFFERS!">
             
             <div class="color-picker-row">
@@ -133,26 +159,26 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
             <button onclick="updateStoreSettings()" style="width: 100%; margin-top: 10px;">🚀 Update Banner</button>
         </div>
 
-        <h3 style="margin-top: 25px;">Audio Settings</h3>
+        <h3 style="color:#333; margin-top: 25px;">Audio Settings</h3>
         <div class="card" style="cursor: default;">
-            <label style="font-weight: bold; color: #333;">Admin Alert Volume</label>
+            <label style="font-weight: bold; color: #333; font-size: 14px;">Admin Alert Volume</label>
             <input type="range" id="adminVolume" min="0" max="1" step="0.1" value="1" style="width: 100%; margin: 10px 0;" onchange="updateVolume()">
             
-            <label style="font-weight: bold; color: #333; margin-top: 10px; display: block;">Upload Admin Alarm Sound (.mp3)</label>
+            <label style="font-weight: bold; color: #333; font-size: 14px; margin-top: 10px; display: block;">Admin Alarm Sound (.mp3)</label>
             <input type="file" id="adminAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
             <button id="saveAdminAudioBtn" onclick="uploadAudio('adminAudioInput', 'adminAlertSoundUrl')" style="width: 100%; background: #2563eb; margin-bottom: 15px;">💾 Save Admin Alarm</button>
 
             <hr style="border: 1px solid #eee; margin: 15px 0;">
-            <label style="font-weight: bold; color: #333;">Upload Customer App Sound (.mp3)</label>
+            <label style="font-weight: bold; color: #333; font-size: 14px;">Customer App Sound (.mp3)</label>
             <input type="file" id="customerAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
             <button id="saveCustAudioBtn" onclick="uploadAudio('customerAudioInput', 'notificationSoundUrl')" style="width: 100%; background: #f59e0b;">💾 Save Customer App Sound</button>
         </div>
 
-        <h3 style="margin-top: 25px;">Payment Settings</h3>
+        <h3 style="color:#333; margin-top: 25px;">Payment Settings</h3>
         <div class="card" style="cursor: default;">
-            <label style="font-weight: bold; color: #333;">UPI ID</label>
+            <label style="font-weight: bold; color: #333; font-size: 14px;">UPI ID</label>
             <input type="text" id="adminUpiInput" placeholder="e.g., yourname@bank">
-            <label style="font-weight: bold; color: #333;">Upload QR Code Image</label>
+            <label style="font-weight: bold; color: #333; font-size: 14px;">Upload QR Code Image</label>
             <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
             <button id="saveSettingsBtn" onclick="savePaymentSettings()" style="width: 100%; margin-top: 15px;">💾 Save Payment Settings</button>
         </div>
@@ -163,30 +189,37 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 <div id="orderModal" class="modal">
     <div class="box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin: 0;">Order Details</h3>
+            <h3 style="margin: 0; color: #111;">Order Details</h3>
             <span id="modalOrderIdText" style="background: #111; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;"></span>
         </div>
         
         <div id="orderDetails" style="line-height: 1.6; margin-bottom: 15px; margin-top: 15px;"></div>
 
-        <select id="statusSelect">
+        <div id="manualDispatchArea" style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #16a34a; margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 13px; color: #16a34a; display:block; margin-bottom: 5px;">Assign Delivery Partner:</label>
+            <select id="driverSelect" style="margin: 0; border: 1px solid #16a34a;">
+                <option value="">-- No Driver Assigned --</option>
+            </select>
+        </div>
+
+        <select id="statusSelect" style="font-weight: bold;">
             <option value="pending">pending</option>
             <option value="preparing">preparing</option>
             <option value="out for delivery">out for delivery</option>
             <option value="delivered">delivered</option>
-            <option value="rejected" style="color: red; font-weight: bold;">rejected</option>
+            <option value="rejected" style="color: red;">rejected</option>
         </select>
 
-        <button style="width: 100%;" onclick="updateStatus()">Update Status</button>
-        <button style="width: 100%; background: #ccc; color: #333;" onclick="closeModal()">Cancel</button>
+        <button style="width: 100%; padding: 14px; font-size: 16px;" onclick="updateStatus()">Save & Update Order</button>
+        <button style="width: 100%; background: #eee; color: #333;" onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
-<div id="screenshotModal" class="modal" style="z-index: 9999; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
+<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
     <div class="box" style="background: transparent; box-shadow: none; text-align: center; width: 95%; max-width: 500px;" onclick="event.stopPropagation();">
         <h3 style="color: white; margin-top: 0;">Payment Screenshot</h3>
         <img id="previewScreenshot" src="" style="width: 100%; border-radius: 12px; border: 4px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 70vh; object-fit: contain; background: black;">
-        <button onclick="closeScreenshotModal()" style="background: #dc2626; margin-top: 15px; font-size: 16px; width: 100%;">❌ Close Preview</button>
+        <button onclick="closeScreenshotModal()" style="background: #dc2626; margin-top: 15px; width: 100%;">❌ Close Preview</button>
     </div>
 </div>
 
@@ -213,6 +246,8 @@ const storage = firebase.storage();
 
 let selectedOrderId = null;
 let editId = null;
+let onlineDriversList = []; // Array of currently online & unsuspended drivers
+let isAutoAssignEnabled = false;
 
 /* ================================
    AUDIO & SYSTEM NOTIFICATIONS
@@ -225,24 +260,14 @@ let alarmInterval = null;
 let wakeLock = null;
 
 async function unlockPermissions() {
-    // 1. Unlock Audio
     alarmAudio.play().then(() => {
-        alarmAudio.pause();
-        alarmAudio.currentTime = 0;
+        alarmAudio.pause(); alarmAudio.currentTime = 0;
         isAudioUnlocked = true;
         document.getElementById('unlockBanner').style.display = 'none';
     }).catch(err => { console.log(err); });
 
-    // 2. Request System Push Notifications (Flashes even if minimized!)
-    if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                console.log("System Push Notifications Enabled!");
-            }
-        });
-    }
+    if ("Notification" in window) { Notification.requestPermission(); }
 
-    // 3. Keep Screen Awake
     if ('wakeLock' in navigator) {
         try {
             wakeLock = await navigator.wakeLock.request('screen');
@@ -255,31 +280,19 @@ async function unlockPermissions() {
     }
 }
 
-function updateVolume() {
-    alarmAudio.volume = document.getElementById('adminVolume').value;
-}
+function updateVolume() { alarmAudio.volume = document.getElementById('adminVolume').value; }
 
 function playAlert(orderText) {
-    // Play Loud Audio
     if (isAudioUnlocked && !alarmInterval) {
         alarmAudio.play().catch(()=>{});
         if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
         alarmInterval = setInterval(() => { alarmAudio.play().catch(()=>{}); }, 3000);
     }
-    
-    // Push System Notification
     if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("🚨 New Order Arrived!", {
-            body: orderText,
-            icon: "https://cdn-icons-png.flaticon.com/512/3500/3500833.png" // Little delivery icon
-        });
+        new Notification("🚨 New Order Arrived!", { body: orderText, icon: "https://cdn-icons-png.flaticon.com/512/3500/3500833.png" });
     }
 }
-
-function stopAlert() {
-    alarmAudio.pause(); alarmAudio.currentTime = 0;
-    if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
-}
+function stopAlert() { alarmAudio.pause(); alarmAudio.currentTime = 0; if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
 
 /* ================================
    AUTH & NAVIGATION
@@ -295,39 +308,41 @@ function logout() { auth.signOut(); }
 function openMenu() { document.getElementById('menu').classList.add("open"); document.getElementById('overlay').style.display = "block"; }
 function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
-function hideAllSections() {
-    document.getElementById('dashboardSection').style.display = "none";
-    document.getElementById('deliverySection').style.display = "none";
-    document.getElementById('itemsSection').style.display = "none";
-    document.getElementById('settingsSection').style.display = "none";
+function showSection(sectionId) {
+    const sections = ['dashboardSection', 'dispatchSection', 'itemsSection', 'settingsSection'];
+    sections.forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    closeMenu();
 }
 
-function showDashboard() { hideAllSections(); document.getElementById('dashboardSection').style.display="block"; closeMenu(); }
-function showDelivery() { hideAllSections(); document.getElementById('deliverySection').style.display="block"; closeMenu(); }
-function showItems() { hideAllSections(); document.getElementById('itemsSection').style.display="block"; closeMenu(); }
-function showSettings() { hideAllSections(); document.getElementById('settingsSection').style.display="block"; closeMenu(); }
-
 /* ================================
-   STORE SETTINGS & AUDIO UPLOADS
+   STORE SETTINGS & PROMO UPLOAD
 ================================ */
 db.collection("settings").doc("store").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
         
-        // Toggles
         document.getElementById('toggleStore').checked = data.isStoreOpen !== false; 
         document.getElementById('toggleCOD').checked = data.allowCOD !== false;      
         document.getElementById('toggleOnline').checked = data.allowOnline !== false;
         
+        // Auto Assign Logic
+        isAutoAssignEnabled = data.autoAssign === true;
+        document.getElementById('toggleAutoAssign').checked = isAutoAssignEnabled;
+
+        // Promo Logic
+        document.getElementById('togglePromo').checked = data.isPromoActive === true;
+        if(data.promoImageUrl) {
+            document.getElementById('promoPreview').src = data.promoImageUrl;
+            document.getElementById('promoPreview').style.display = "block";
+        }
+
         // Announcement
         if(data.announcementText) document.getElementById('announceText').value = data.announcementText;
         if(data.announcementBgColor) document.getElementById('announceBgColor').value = data.announcementBgColor;
         if(data.announcementTextColor) document.getElementById('announceTextColor').value = data.announcementTextColor;
 
-        // Custom Admin Audio Sync
-        if(data.adminAlertSoundUrl) {
-            alarmAudio.src = data.adminAlertSoundUrl;
-        }
+        if(data.adminAlertSoundUrl) { alarmAudio.src = data.adminAlertSoundUrl; }
     } else {
         document.getElementById('toggleStore').checked = true;
         document.getElementById('toggleCOD').checked = true;
@@ -340,114 +355,160 @@ function updateStoreSettings() {
         isStoreOpen: document.getElementById('toggleStore').checked,
         allowCOD: document.getElementById('toggleCOD').checked,
         allowOnline: document.getElementById('toggleOnline').checked,
+        autoAssign: document.getElementById('toggleAutoAssign').checked,
+        isPromoActive: document.getElementById('togglePromo').checked,
         announcementText: document.getElementById('announceText').value.trim(),
         announcementBgColor: document.getElementById('announceBgColor').value,
         announcementTextColor: document.getElementById('announceTextColor').value
-    }, { merge: true });
-    alert("Store settings instantly updated live!");
+    }, { merge: true }).then(()=> alert("Store settings instantly updated live!"));
+}
+
+async function uploadPromoImage() {
+    let fileInput = document.getElementById('promoImageInput');
+    let btn = document.getElementById('savePromoBtn');
+    if (fileInput.files.length === 0) { alert("Please select an image first."); return; }
+    
+    btn.innerText = "Uploading Image..."; btn.disabled = true;
+    try {
+        const file = fileInput.files[0];
+        const ref = storage.ref().child(`promo_images/${Date.now()}_${file.name}`);
+        await ref.put(file);
+        let url = await ref.getDownloadURL();
+        await db.collection("settings").doc("store").set({ promoImageUrl: url, isPromoActive: true }, {merge: true});
+        document.getElementById('togglePromo').checked = true;
+        alert("✨ Promo Image Live Updated!");
+        fileInput.value = ""; 
+    } catch (e) { alert("Error uploading image"); } 
+    finally { btn.innerText = "✨ Upload & Set Promo"; btn.disabled = false; }
 }
 
 async function uploadAudio(inputId, firestoreKey) {
     let fileInput = document.getElementById(inputId);
     let btn = document.getElementById(inputId === 'adminAudioInput' ? 'saveAdminAudioBtn' : 'saveCustAudioBtn');
+    if (fileInput.files.length === 0) { alert("Select an audio file first."); return; }
     
-    if (fileInput.files.length === 0) { alert("Please select an audio file first."); return; }
-    
-    btn.innerText = "Uploading Audio...";
-    btn.disabled = true;
-
+    btn.innerText = "Uploading Audio..."; btn.disabled = true;
     try {
         const file = fileInput.files[0];
-        const storageRef = storage.ref();
-        const audioRef = storageRef.child(`audio_settings/${Date.now()}_${file.name}`);
-        await audioRef.put(file);
-        let url = await audioRef.getDownloadURL();
-        
-        let updateData = {};
-        updateData[firestoreKey] = url;
+        const ref = storage.ref().child(`audio_settings/${Date.now()}_${file.name}`);
+        await ref.put(file);
+        let url = await ref.getDownloadURL();
+        let updateData = {}; updateData[firestoreKey] = url;
         await db.collection("settings").doc("store").set(updateData, {merge: true});
-        
         alert("✅ Custom Audio Live Updated!");
         fileInput.value = ""; 
-    } catch (e) {
-        console.error("Error uploading audio", e);
-        alert("Error uploading audio. Ensure Storage Rules allow it.");
-    } finally {
-        btn.innerText = "💾 Save Sound";
-        btn.disabled = false;
-    }
+    } catch (e) { alert("Error uploading audio."); } 
+    finally { btn.innerText = "💾 Save Sound"; btn.disabled = false; }
 }
 
 /* ================================
-   PAYMENT SETTINGS LOGIC 
+   DISPATCH: DRIVER MANAGEMENT 
 ================================ */
-db.collection("settings").doc("payment").onSnapshot(doc => {
-    if(doc.exists) {
-        let data = doc.data();
-        if(data.upiId) document.getElementById('adminUpiInput').value = data.upiId;
-    }
-});
-async function savePaymentSettings() {
-    let upiId = document.getElementById('adminUpiInput').value.trim();
-    let fileInput = document.getElementById('adminQrInput');
-    let btn = document.getElementById('saveSettingsBtn');
-    if(!upiId) { alert("Please enter your UPI ID"); return; }
-    btn.innerText = "Saving & Uploading..."; btn.disabled = true;
-    try {
-        let updateData = { upiId: upiId };
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`);
-            await qrRef.put(file);
-            updateData.qrUrl = await qrRef.getDownloadURL();
+db.collection("drivers").onSnapshot(snap => {
+    onlineDriversList = [];
+    let listHTML = "";
+    let selectHTML = '<option value="">-- No Driver Assigned --</option>';
+
+    snap.forEach(doc => {
+        let d = doc.data();
+        let isSuspended = d.isSuspended || false;
+        let isOnline = d.isOnline || false;
+
+        // Build Badge
+        let badge = "";
+        if (isSuspended) badge = `<span class="badge badge-suspended">Suspended</span>`;
+        else if (isOnline) badge = `<span class="badge badge-online">🟢 Online</span>`;
+        else badge = `<span class="badge badge-offline">⚫ Offline</span>`;
+
+        // Build Action Button
+        let suspendAction = isSuspended ? false : true;
+        let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver";
+        let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
+
+        listHTML += `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <b style="font-size: 16px;">${d.name || "Unknown"}</b><br>
+                <span style="font-size: 13px; color: #666;">📞 ${d.phone || "No Phone"}</span><br>
+                <div style="margin-top: 6px;">${badge}</div>
+            </div>
+            <div>
+                <button onclick="toggleDriverSuspension('${doc.id}', ${suspendAction})" style="background:${suspendBtnColor}; padding: 8px 12px; font-size: 13px;">${suspendBtnText}</button>
+            </div>
+        </div>`;
+
+        // Populate Assignment Dropdown & Global Online Array
+        if (isOnline && !isSuspended && d.phone) {
+            onlineDriversList.push({ id: doc.id, name: d.name, phone: d.phone });
+            selectHTML += `<option value="${doc.id}|${d.phone}">${d.name} (${d.phone})</option>`;
         }
-        await db.collection("settings").doc("payment").set(updateData, {merge: true});
-        alert("✅ Payment Settings Live Updated!");
-        fileInput.value = ""; 
-    } catch (e) { alert("Error saving settings"); } 
-    finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
+    });
+
+    document.getElementById('partnersList').innerHTML = listHTML;
+    document.getElementById('driverSelect').innerHTML = selectHTML;
+});
+
+function toggleDriverSuspension(driverId, suspendState) {
+    db.collection("drivers").doc(driverId).update({ isSuspended: suspendState });
 }
 
 /* ================================
-   LOAD ORDERS 
+   LOAD ORDERS & AUTO-ASSIGN
 ================================ */
 let initialLoadDone = false;
 
 db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
     document.getElementById('dashboardList').innerHTML = "";
-    document.getElementById('deliveryList').innerHTML = "";
 
     snapshot.docChanges().forEach(change => {
+        let o = change.doc.data();
+        let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
+        
+        // Play Alert on new order
         if(change.type === "added" && initialLoadDone) { 
-            let o = change.doc.data();
-            let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
             playAlert(`Order #${displayId} from ${o.userName || "Customer"} - ₹${o.total}`); 
+        }
+
+        // --- MASTER AUTO-ASSIGN LOGIC ---
+        // If an order is pending, auto-assign is ON, and it has no driver yet
+        if (change.type === "added" && isAutoAssignEnabled && o.status === "pending" && !o.driverId) {
+            if (onlineDriversList.length > 0) {
+                // Simplistic: Pick the first available online driver
+                let chosenDriver = onlineDriversList[0];
+                db.collection("orders").doc(change.doc.id).update({
+                    driverId: chosenDriver.id,
+                    driverPhone: chosenDriver.phone,
+                    driverName: chosenDriver.name
+                }).then(() => console.log(`Auto-assigned #${displayId} to ${chosenDriver.name}`));
+            }
         }
     });
 
     snapshot.forEach(doc => {
         let o = doc.data();
         let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
-        let callButtonHTML = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Customer</a>` : "";
-        let paymentInfo = `<b>Payment:</b> ${o.payment}`;
-        if (o.payment === "ONLINE" && o.paymentScreenshot) {
-            paymentInfo += `<br><button onclick="event.stopPropagation(); viewScreenshot('${o.paymentScreenshot}')" style="background: #eefce9; color: #16a34a; border: 1px solid #16a34a; width: auto; padding: 6px 12px; margin-top: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸 Verify Screenshot</button>`;
-        }
+        
+        let customerCall = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Cust.</a>` : "";
+        
+        // Show assigned driver info directly on the card
+        let driverInfo = o.driverId 
+            ? `<div style="background: #eefce9; padding: 6px; border-radius: 6px; font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 8px; border: 1px solid #ccebc4;">🛵 Assigned: ${o.driverName || 'Partner'}</div>` 
+            : `<div style="background: #fee2e2; padding: 6px; border-radius: 6px; font-size: 12px; color: #dc2626; font-weight: bold; margin-top: 8px; border: 1px dashed #fca5a5;">⚠️ Unassigned</div>`;
 
         let statusColor = o.status === 'rejected' ? 'red' : (o.status === 'pending' ? '#f59e0b' : 'green');
 
         let html = `
         <div class="card" onclick="openOrder('${doc.id}')">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <div class="card-header">
                 <b style="font-size: 17px;">#${displayId} - ${o.userName || "Customer"}</b>
                 <span style="color: ${statusColor}; font-weight:bold; text-transform:capitalize;">${o.status}</span>
             </div>
-            ${paymentInfo}
-            <div style="margin-top: 5px;">${callButtonHTML}</div>
+            <div style="font-size: 14px; color: #555;"><b>Payment:</b> ${o.payment}</div>
+            ${driverInfo}
+            <div style="margin-top: 8px;">${customerCall}</div>
         </div>`;
 
         document.getElementById('dashboardList').innerHTML += html;
-        if(o.status === "out for delivery"){ document.getElementById('deliveryList').innerHTML += html; }
     });
     initialLoadDone = true;
 });
@@ -464,15 +525,30 @@ function openOrder(id) {
         let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
         document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
 
+        // Set the Dropdown to the currently assigned driver
+        let driverSelect = document.getElementById('driverSelect');
+        if (o.driverId && o.driverPhone) {
+            let val = `${o.driverId}|${o.driverPhone}`;
+            // If the driver is currently offline, their option won't exist in the select natively. We add it safely.
+            if (!Array.from(driverSelect.options).some(opt => opt.value === val)) {
+                driverSelect.innerHTML += `<option value="${val}">${o.driverName || 'Partner'} (${o.driverPhone}) - Offline</option>`;
+            }
+            driverSelect.value = val;
+        } else {
+            driverSelect.value = "";
+        }
+
         let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
             paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`;
         }
         
-        let callAction = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" style="width: 100%; text-align: center; box-sizing: border-box; margin-bottom: 10px;">📞 Call ${o.userPhone}</a>` : "";
+        let callCust = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; margin-bottom: 5px;">📞 Call Customer: ${o.userPhone}</a>` : "";
+        let callDriver = o.driverPhone ? `<a href="tel:${o.driverPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; background: #16a34a; border-color: #15803d; margin-bottom: 10px;">🛵 Call Driver: ${o.driverPhone}</a>` : "";
 
         document.getElementById('orderDetails').innerHTML = `
-            ${callAction}
+            ${callCust}
+            ${callDriver}
             <p style="margin-top:0;"><b>Customer:</b> ${o.userName || "Guest"}</p>
             <p><b>Items:</b><br> ${o.items ? o.items.map(i=>`• ${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
             <hr>
@@ -482,13 +558,38 @@ function openOrder(id) {
         `;
 
         document.getElementById('statusSelect').value = o.status;
+        
+        // Hide Manual Dispatch area if auto-assign is on
+        document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
+
         document.getElementById('orderModal').style.display = "flex";
     });
 }
 
 function updateStatus() {
     let status = document.getElementById('statusSelect').value;
-    db.collection("orders").doc(selectedOrderId).update({ status: status });
+    
+    let updatePayload = { status: status };
+
+    // If manual assignment is open, check the dropdown
+    if (!isAutoAssignEnabled) {
+        let selectedDriver = document.getElementById('driverSelect').value;
+        if (selectedDriver) {
+            let parts = selectedDriver.split('|');
+            let selText = document.getElementById('driverSelect').options[document.getElementById('driverSelect').selectedIndex].text;
+            let dName = selText.split(' (')[0]; // Extract name
+            updatePayload.driverId = parts[0];
+            updatePayload.driverPhone = parts[1];
+            updatePayload.driverName = dName;
+        } else {
+            // They cleared it
+            updatePayload.driverId = firebase.firestore.FieldValue.delete();
+            updatePayload.driverPhone = firebase.firestore.FieldValue.delete();
+            updatePayload.driverName = firebase.firestore.FieldValue.delete();
+        }
+    }
+
+    db.collection("orders").doc(selectedOrderId).update(updatePayload);
     closeModal();
 }
 
@@ -497,7 +598,7 @@ function viewScreenshot(url) { document.getElementById('previewScreenshot').src 
 function closeScreenshotModal() { document.getElementById('screenshotModal').style.display = "none"; document.getElementById('previewScreenshot').src = ""; }
 
 /* ================================
-   ITEMS MANAGEMENT (WITH DESCRIPTIONS)
+   ITEMS MANAGEMENT
 ================================ */
 function saveItem() {
     let name = document.getElementById('nameInput').value;
@@ -515,10 +616,7 @@ function saveItem() {
         db.collection("items").add(data);
     }
 
-    document.getElementById('nameInput').value = "";
-    document.getElementById('priceInput').value = "";
-    document.getElementById('imageInput').value = "";
-    document.getElementById('descInput').value = "";
+    document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = "";
 }
 
 db.collection("items").onSnapshot(snap => {
@@ -538,17 +636,14 @@ db.collection("items").onSnapshot(snap => {
     });
 });
 
-function editItem(id, n, p, img, desc) {
-    editId = id;
-    document.getElementById('nameInput').value = n;
-    document.getElementById('priceInput').value = p;
-    document.getElementById('imageInput').value = img;
-    document.getElementById('descInput').value = desc;
-    window.scrollTo(0, 0);
-}
+function editItem(id, n, p, img, desc) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; window.scrollTo(0, 0); }
+function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); } }
 
-function deleteItem(id) {
-    if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); }
+db.collection("settings").doc("payment").onSnapshot(doc => { if(doc.exists && doc.data().upiId) document.getElementById('adminUpiInput').value = doc.data().upiId; });
+async function savePaymentSettings() {
+    let upiId = document.getElementById('adminUpiInput').value.trim(); let fileInput = document.getElementById('adminQrInput'); let btn = document.getElementById('saveSettingsBtn');
+    if(!upiId) { alert("Please enter your UPI ID"); return; } btn.innerText = "Saving & Uploading..."; btn.disabled = true;
+    try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); alert("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings"); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 </script>
 
