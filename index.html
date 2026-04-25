@@ -11,7 +11,6 @@ body { margin: 0; font-family: Arial; background: #f5f5f5; }
 /* HEADER & MENU */
 header { background: #111; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3); height: 65px; box-sizing: border-box; }
 
-/* Audio & Notification Unlock Banner */
 #unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1001; position: relative;}
 
 .menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 10000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -64,10 +63,17 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 .badge-online { background: #16a34a; }
 .badge-offline { background: #666; }
 .badge-suspended { background: #dc2626; }
+
+/* TOAST NOTIFICATIONS */
+#toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+.toast { background: #111; color: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 14px; text-align: center; animation: toastFade 3s forwards; }
+@keyframes toastFade { 0% { opacity: 0; transform: translateY(-20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
 </style>
 </head>
 
 <body>
+
+<div id="toastContainer"></div>
 
 <div id="unlockBanner" onclick="unlockPermissions()">
     🔔 Click here to Enable Max Audio & Push Notifications
@@ -133,6 +139,10 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
         
         <h3 style="color:#333; margin-top:0;">Master Power Controls</h3>
         <div class="card" style="cursor: default;">
+            <div class="setting-row">
+                <div><b style="font-size: 16px;">Store Status</b><div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div></div>
+                <label class="switch"><input type="checkbox" id="toggleStore" onchange="updateStoreSettings()"><span class="slider"></span></label>
+            </div>
             <div class="setting-row">
                 <div><b style="font-size: 16px;">Auto-Assign Drivers</b><div style="font-size: 13px; color: #666;">Assigns driver automatically when marked "Out for Delivery"</div></div>
                 <label class="switch"><input type="checkbox" id="toggleAutoAssign" onchange="updateStoreSettings()"><span class="slider"></span></label>
@@ -231,7 +241,7 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
     </div>
 </div>
 
-<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
+<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);">
     <div class="box" style="background: transparent; box-shadow: none; text-align: center; width: 95%; max-width: 500px;" onclick="event.stopPropagation();">
         <h3 style="color: white; margin-top: 0;">Payment Screenshot</h3>
         <img id="previewScreenshot" src="" style="width: 100%; border-radius: 12px; border: 4px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 70vh; object-fit: contain; background: black;">
@@ -260,10 +270,30 @@ const auth = firebase.auth();
 const storage = firebase.storage();
 
 let selectedOrderId = null;
-let currentOrderDriverId = null; // Helps us know if an order already has a driver
+let currentOrderDriverId = null; 
 let editId = null;
 let onlineDriversList = []; 
 let isAutoAssignEnabled = false;
+
+// TOAST NOTIFICATIONS
+function showToast(message) {
+    let container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = "toast";
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
+// GLOBAL MODAL CLOSE (Click outside to dismiss)
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+        if(event.target.id === "screenshotModal") {
+            document.getElementById('previewScreenshot').src = "";
+        }
+    }
+};
 
 /* ================================
    AUDIO & SYSTEM NOTIFICATIONS
@@ -280,6 +310,7 @@ async function unlockPermissions() {
         alarmAudio.pause(); alarmAudio.currentTime = 0;
         isAudioUnlocked = true;
         document.getElementById('unlockBanner').style.display = 'none';
+        showToast("Audio & Notifications Enabled! 🔔");
     }).catch(err => { console.log(err); });
 
     if ("Notification" in window) { Notification.requestPermission(); }
@@ -374,12 +405,13 @@ db.collection("settings").doc("store").onSnapshot(doc => {
     }
 });
 
-// Used by both the header toggle and the settings toggle
 function toggleStoreStatus() {
-    // If called from header, update the DB with the header switch state
+    let isOpen = document.getElementById('headerStoreToggle').checked;
     db.collection("settings").doc("store").set({
-        isStoreOpen: document.getElementById('headerStoreToggle').checked
-    }, { merge: true });
+        isStoreOpen: isOpen
+    }, { merge: true }).then(() => {
+        showToast(isOpen ? "✅ Store is now OPEN" : "🚫 Store is now CLOSED");
+    }).catch(e => alert("Permission Error: " + e.message));
 }
 
 function updateStoreSettings() {
@@ -392,7 +424,9 @@ function updateStoreSettings() {
         announcementText: document.getElementById('announceText').value.trim(),
         announcementBgColor: document.getElementById('announceBgColor').value,
         announcementTextColor: document.getElementById('announceTextColor').value
-    }, { merge: true }).then(()=> alert("Store settings instantly updated live!"));
+    }, { merge: true })
+    .then(()=> showToast("✅ Settings Updated Live!"))
+    .catch(e => alert("Permission Error: Are you logged in as Admin? " + e.message));
 }
 
 async function uploadPromoImage() {
@@ -408,9 +442,9 @@ async function uploadPromoImage() {
         let url = await ref.getDownloadURL();
         await db.collection("settings").doc("store").set({ promoImageUrl: url, isPromoActive: true }, {merge: true});
         document.getElementById('togglePromo').checked = true;
-        alert("✨ Promo Image Live Updated!");
+        showToast("✨ Promo Image Live Updated!");
         fileInput.value = ""; 
-    } catch (e) { alert("Error uploading image"); } 
+    } catch (e) { alert("Error uploading image: " + e.message); } 
     finally { btn.innerText = "✨ Upload & Set Promo"; btn.disabled = false; }
 }
 
@@ -427,9 +461,9 @@ async function uploadAudio(inputId, firestoreKey) {
         let url = await ref.getDownloadURL();
         let updateData = {}; updateData[firestoreKey] = url;
         await db.collection("settings").doc("store").set(updateData, {merge: true});
-        alert("✅ Custom Audio Live Updated!");
+        showToast("✅ Custom Audio Live Updated!");
         fileInput.value = ""; 
-    } catch (e) { alert("Error uploading audio."); } 
+    } catch (e) { alert("Error uploading audio: " + e.message); } 
     finally { btn.innerText = "💾 Save Sound"; btn.disabled = false; }
 }
 
@@ -478,7 +512,9 @@ db.collection("drivers").onSnapshot(snap => {
 });
 
 function toggleDriverSuspension(driverId, suspendState) {
-    db.collection("drivers").doc(driverId).update({ isSuspended: suspendState });
+    db.collection("drivers").doc(driverId).update({ isSuspended: suspendState })
+    .then(() => showToast("Driver status updated!"))
+    .catch(e => alert("Error: " + e.message));
 }
 
 /* ================================
@@ -495,6 +531,18 @@ db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         
         if(change.type === "added" && initialLoadDone) { 
             playAlert(`Order #${displayId} from ${o.userName || "Customer"} - ₹${o.total}`); 
+        }
+
+        // NEW INCOMING ORDER SMART AUTO-ASSIGN
+        if (change.type === "added" && initialLoadDone && isAutoAssignEnabled && o.status === "pending" && !o.driverId) {
+            if (onlineDriversList.length > 0) {
+                let chosenDriver = onlineDriversList[0];
+                db.collection("orders").doc(change.doc.id).update({
+                    driverId: chosenDriver.id,
+                    driverPhone: chosenDriver.phone,
+                    driverName: chosenDriver.name
+                }).then(() => showToast(`Auto-assigned #${displayId} to ${chosenDriver.name}`));
+            }
         }
     });
 
@@ -536,7 +584,7 @@ function openOrder(id) {
         let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
         document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
         
-        currentOrderDriverId = o.driverId || null; // Track if it has a driver
+        currentOrderDriverId = o.driverId || null; 
 
         let driverSelect = document.getElementById('driverSelect');
         if (o.driverId && o.driverPhone) {
@@ -569,7 +617,10 @@ function openOrder(id) {
         `;
 
         document.getElementById('statusSelect').value = o.status;
+        
+        // Hide Manual Dispatch if Auto Assign is ON
         document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
+
         document.getElementById('orderModal').style.display = "flex";
     });
 }
@@ -595,19 +646,22 @@ function updateStatus() {
         }
     } 
     else if (status === "out for delivery" && !currentOrderDriverId) {
-        // NEW: SMART AUTO-ASSIGN LOGIC (Triggered when marked "Out for delivery")
+        // SMART AUTO-ASSIGN LOGIC
         if (onlineDriversList.length > 0) {
             let chosenDriver = onlineDriversList[0];
             updatePayload.driverId = chosenDriver.id;
             updatePayload.driverPhone = chosenDriver.phone;
             updatePayload.driverName = chosenDriver.name;
-            alert(`Auto-assigned order to ${chosenDriver.name}!`);
+            showToast(`Auto-assigned order to ${chosenDriver.name}!`);
         } else {
             alert("Warning: Order marked 'Out for Delivery', but NO DRIVERS ARE ONLINE. It is currently unassigned.");
         }
     }
 
-    db.collection("orders").doc(selectedOrderId).update(updatePayload);
+    db.collection("orders").doc(selectedOrderId).update(updatePayload)
+    .then(() => showToast("✅ Order Updated!"))
+    .catch(e => alert("Permission Error: " + e.message));
+    
     closeModal();
 }
 
@@ -627,8 +681,8 @@ function saveItem() {
     if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
     let data = { name, price: Number(price), image, description: desc };
 
-    if(editId) { db.collection("items").doc(editId).update(data); editId = null; } 
-    else { db.collection("items").add(data); }
+    if(editId) { db.collection("items").doc(editId).update(data).then(()=>showToast("Item Updated")); editId = null; } 
+    else { db.collection("items").add(data).then(()=>showToast("Item Added")); }
 
     document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = "";
 }
@@ -651,13 +705,16 @@ db.collection("items").onSnapshot(snap => {
 });
 
 function editItem(id, n, p, img, desc) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; window.scrollTo(0, 0); }
-function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); } }
+function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); showToast("Item Deleted");} }
 
+/* ================================
+   PAYMENT SETTINGS
+================================ */
 db.collection("settings").doc("payment").onSnapshot(doc => { if(doc.exists && doc.data().upiId) document.getElementById('adminUpiInput').value = doc.data().upiId; });
 async function savePaymentSettings() {
     let upiId = document.getElementById('adminUpiInput').value.trim(); let fileInput = document.getElementById('adminQrInput'); let btn = document.getElementById('saveSettingsBtn');
     if(!upiId) { alert("Please enter your UPI ID"); return; } btn.innerText = "Saving..."; btn.disabled = true;
-    try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); alert("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings"); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
+    try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); showToast("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings: " + e.message); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 </script>
 
