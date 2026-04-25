@@ -9,7 +9,7 @@
 body { margin: 0; font-family: Arial; background: #f5f5f5; }
 header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; }
 
-/* Audio Unlock Banner */
+/* Audio & Notification Unlock Banner */
 #unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 .menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 1000; }
@@ -23,7 +23,7 @@ header { background: #111; color: white; padding: 15px; display: flex; gap: 10px
 
 .card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
 
-input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+input[type="text"], input[type="number"], input[type="file"], textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-family: Arial; }
 
 button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; }
 .edit { background: orange; }
@@ -33,10 +33,10 @@ button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a3
 .box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
 select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 
-/* Call Button Styling */
+/* Call Button */
 .btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; }
 
-/* --- IOS STYLE TOGGLE SWITCHES --- */
+/* IOS Style Toggles */
 .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
 .setting-row:last-child { border-bottom: none; }
 .switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; }
@@ -45,13 +45,17 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 input:checked + .slider { background-color: #16a34a; }
 input:checked + .slider:before { transform: translateX(26px); }
+
+/* Color Pickers */
+.color-picker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; border-radius: 5px; cursor: pointer; }
 </style>
 </head>
 
 <body>
 
-<div id="unlockBanner" onclick="unlockAudio()">
-    🔔 Click here to Enable Audio Alerts for New Orders
+<div id="unlockBanner" onclick="unlockPermissions()">
+    🔔 Click here to Enable Max Audio & Push Notifications
 </div>
 
 <header>
@@ -84,66 +88,72 @@ input:checked + .slider:before { transform: translateX(26px); }
 
     <div id="itemsSection" style="display:none">
         <h3>Add / Edit Menu Item</h3>
-        <input type="text" id="nameInput" placeholder="Item Name">
-        <input type="number" id="priceInput" placeholder="Price">
-        <input type="text" id="imageInput" placeholder="Image URL">
+        <input type="text" id="nameInput" placeholder="Item Name *">
+        <input type="number" id="priceInput" placeholder="Price *">
+        <input type="text" id="imageInput" placeholder="Image URL *">
+        <textarea id="descInput" rows="2" placeholder="Item Description (Optional)"></textarea>
         <button onclick="saveItem()" style="width: 100%;">Save Item</button>
 
         <hr style="margin: 20px 0; border: 1px solid #ddd;">
-
         <h3>Current Menu Items</h3>
         <div id="itemsList"></div>
     </div>
 
     <div id="settingsSection" style="display:none">
         
-        <h3>Master Power Controls</h3>
+        <h3 style="margin-top: 0;">Master Power Controls</h3>
         <div class="card" style="cursor: default;">
             <div class="setting-row">
-                <div>
-                    <b style="font-size: 16px;">Store Status</b>
-                    <div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="toggleStore" onchange="updateStoreToggles()">
-                    <span class="slider"></span>
-                </label>
+                <div><b style="font-size: 16px;">Store Status</b><div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div></div>
+                <label class="switch"><input type="checkbox" id="toggleStore" onchange="updateStoreSettings()"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
-                <div>
-                    <b style="font-size: 16px;">Allow COD</b>
-                    <div style="font-size: 13px; color: #666;">Accept Cash on Delivery</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="toggleCOD" onchange="updateStoreToggles()">
-                    <span class="slider"></span>
-                </label>
+                <div><b style="font-size: 16px;">Allow COD</b><div style="font-size: 13px; color: #666;">Accept Cash on Delivery</div></div>
+                <label class="switch"><input type="checkbox" id="toggleCOD" onchange="updateStoreSettings()"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
-                <div>
-                    <b style="font-size: 16px;">Allow Online Pay</b>
-                    <div style="font-size: 13px; color: #666;">Accept UPI Payments</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="toggleOnline" onchange="updateStoreToggles()">
-                    <span class="slider"></span>
-                </label>
+                <div><b style="font-size: 16px;">Allow Online Pay</b><div style="font-size: 13px; color: #666;">Accept UPI Payments</div></div>
+                <label class="switch"><input type="checkbox" id="toggleOnline" onchange="updateStoreSettings()"><span class="slider"></span></label>
             </div>
         </div>
 
-        <h3 style="margin-top: 25px;">Payment & QR Settings</h3>
+        <h3 style="margin-top: 25px;">Live Announcement Banner</h3>
         <div class="card" style="cursor: default;">
-            <label style="font-weight: bold; color: #333;">1. Enter your UPI ID</label>
-            <input type="text" id="adminUpiInput" placeholder="e.g., yourname@bank">
+            <label style="font-weight: bold; color: #333;">Announcement Text</label>
+            <input type="text" id="announceText" placeholder="e.g. USE CODE FLAT50 FOR OFFERS!">
             
-            <label style="font-weight: bold; color: #333;">2. Upload QR Code Image</label>
-            <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
-            
-            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #ccebc4; margin-top: 10px; text-align: center;">
-                <p style="margin: 0 0 10px 0; font-weight: bold; color: #16a34a;">Currently Live QR Code</p>
-                <img id="currentQrPreview" src="https://via.placeholder.com/150?text=No+QR+Uploaded" style="width: 150px; border-radius: 8px;">
+            <div class="color-picker-row">
+                <input type="color" id="announceBgColor" value="#fef08a">
+                <label style="font-size: 14px; color: #444;">Background Color</label>
             </div>
+            <div class="color-picker-row">
+                <input type="color" id="announceTextColor" value="#854d0e">
+                <label style="font-size: 14px; color: #444;">Text Color</label>
+            </div>
+            <button onclick="updateStoreSettings()" style="width: 100%; margin-top: 10px;">🚀 Update Banner</button>
+        </div>
 
+        <h3 style="margin-top: 25px;">Audio Settings</h3>
+        <div class="card" style="cursor: default;">
+            <label style="font-weight: bold; color: #333;">Admin Alert Volume</label>
+            <input type="range" id="adminVolume" min="0" max="1" step="0.1" value="1" style="width: 100%; margin: 10px 0;" onchange="updateVolume()">
+            
+            <label style="font-weight: bold; color: #333; margin-top: 10px; display: block;">Upload Admin Alarm Sound (.mp3)</label>
+            <input type="file" id="adminAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
+            <button id="saveAdminAudioBtn" onclick="uploadAudio('adminAudioInput', 'adminAlertSoundUrl')" style="width: 100%; background: #2563eb; margin-bottom: 15px;">💾 Save Admin Alarm</button>
+
+            <hr style="border: 1px solid #eee; margin: 15px 0;">
+            <label style="font-weight: bold; color: #333;">Upload Customer App Sound (.mp3)</label>
+            <input type="file" id="customerAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
+            <button id="saveCustAudioBtn" onclick="uploadAudio('customerAudioInput', 'notificationSoundUrl')" style="width: 100%; background: #f59e0b;">💾 Save Customer App Sound</button>
+        </div>
+
+        <h3 style="margin-top: 25px;">Payment Settings</h3>
+        <div class="card" style="cursor: default;">
+            <label style="font-weight: bold; color: #333;">UPI ID</label>
+            <input type="text" id="adminUpiInput" placeholder="e.g., yourname@bank">
+            <label style="font-weight: bold; color: #333;">Upload QR Code Image</label>
+            <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
             <button id="saveSettingsBtn" onclick="savePaymentSettings()" style="width: 100%; margin-top: 15px;">💾 Save Payment Settings</button>
         </div>
     </div>
@@ -164,6 +174,7 @@ input:checked + .slider:before { transform: translateX(26px); }
             <option value="preparing">preparing</option>
             <option value="out for delivery">out for delivery</option>
             <option value="delivered">delivered</option>
+            <option value="rejected" style="color: red; font-weight: bold;">rejected</option>
         </select>
 
         <button style="width: 100%;" onclick="updateStatus()">Update Status</button>
@@ -204,24 +215,34 @@ let selectedOrderId = null;
 let editId = null;
 
 /* ================================
-   AUDIO & ALERT SYSTEM 
+   AUDIO & SYSTEM NOTIFICATIONS
 ================================ */
 let alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
 alarmAudio.loop = true;
+alarmAudio.volume = 1.0; 
 let isAudioUnlocked = false;
 let alarmInterval = null;
 let wakeLock = null;
 
-async function unlockAudio() {
+async function unlockPermissions() {
+    // 1. Unlock Audio
     alarmAudio.play().then(() => {
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
         isAudioUnlocked = true;
         document.getElementById('unlockBanner').style.display = 'none';
-    }).catch(err => {
-        alert("Could not enable audio. Please check your browser settings.");
-    });
+    }).catch(err => { console.log(err); });
 
+    // 2. Request System Push Notifications (Flashes even if minimized!)
+    if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                console.log("System Push Notifications Enabled!");
+            }
+        });
+    }
+
+    // 3. Keep Screen Awake
     if ('wakeLock' in navigator) {
         try {
             wakeLock = await navigator.wakeLock.request('screen');
@@ -230,16 +251,29 @@ async function unlockAudio() {
                     wakeLock = await navigator.wakeLock.request('screen');
                 }
             });
-        } catch (err) { console.log("Wake Lock error:", err); }
+        } catch (err) {}
     }
 }
 
-function playAlert() {
-    if (alarmInterval) return; 
-    if (!isAudioUnlocked) return;
-    alarmAudio.play().catch(()=>{});
-    if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
-    alarmInterval = setInterval(() => { alarmAudio.play().catch(()=>{}); }, 3000);
+function updateVolume() {
+    alarmAudio.volume = document.getElementById('adminVolume').value;
+}
+
+function playAlert(orderText) {
+    // Play Loud Audio
+    if (isAudioUnlocked && !alarmInterval) {
+        alarmAudio.play().catch(()=>{});
+        if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
+        alarmInterval = setInterval(() => { alarmAudio.play().catch(()=>{}); }, 3000);
+    }
+    
+    // Push System Notification
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🚨 New Order Arrived!", {
+            body: orderText,
+            icon: "https://cdn-icons-png.flaticon.com/512/3500/3500833.png" // Little delivery icon
+        });
+    }
 }
 
 function stopAlert() {
@@ -252,9 +286,7 @@ function stopAlert() {
 ================================ */
 auth.onAuthStateChanged(user => {
     if(!user) { login(); return; }
-    if(user.email !== ADMIN_EMAIL){
-        alert("Not authorized. You are not the admin."); auth.signOut();
-    }
+    if(user.email !== ADMIN_EMAIL){ alert("Not authorized."); auth.signOut(); }
 });
 
 function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
@@ -276,14 +308,26 @@ function showItems() { hideAllSections(); document.getElementById('itemsSection'
 function showSettings() { hideAllSections(); document.getElementById('settingsSection').style.display="block"; closeMenu(); }
 
 /* ================================
-   MASTER POWER TOGGLES LOGIC
+   STORE SETTINGS & AUDIO UPLOADS
 ================================ */
 db.collection("settings").doc("store").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
-        document.getElementById('toggleStore').checked = data.isStoreOpen !== false; // default true
-        document.getElementById('toggleCOD').checked = data.allowCOD !== false;      // default true
-        document.getElementById('toggleOnline').checked = data.allowOnline !== false;// default true
+        
+        // Toggles
+        document.getElementById('toggleStore').checked = data.isStoreOpen !== false; 
+        document.getElementById('toggleCOD').checked = data.allowCOD !== false;      
+        document.getElementById('toggleOnline').checked = data.allowOnline !== false;
+        
+        // Announcement
+        if(data.announcementText) document.getElementById('announceText').value = data.announcementText;
+        if(data.announcementBgColor) document.getElementById('announceBgColor').value = data.announcementBgColor;
+        if(data.announcementTextColor) document.getElementById('announceTextColor').value = data.announcementTextColor;
+
+        // Custom Admin Audio Sync
+        if(data.adminAlertSoundUrl) {
+            alarmAudio.src = data.adminAlertSoundUrl;
+        }
     } else {
         document.getElementById('toggleStore').checked = true;
         document.getElementById('toggleCOD').checked = true;
@@ -291,16 +335,47 @@ db.collection("settings").doc("store").onSnapshot(doc => {
     }
 });
 
-function updateStoreToggles() {
-    let isStoreOpen = document.getElementById('toggleStore').checked;
-    let allowCOD = document.getElementById('toggleCOD').checked;
-    let allowOnline = document.getElementById('toggleOnline').checked;
-
+function updateStoreSettings() {
     db.collection("settings").doc("store").set({
-        isStoreOpen: isStoreOpen,
-        allowCOD: allowCOD,
-        allowOnline: allowOnline
+        isStoreOpen: document.getElementById('toggleStore').checked,
+        allowCOD: document.getElementById('toggleCOD').checked,
+        allowOnline: document.getElementById('toggleOnline').checked,
+        announcementText: document.getElementById('announceText').value.trim(),
+        announcementBgColor: document.getElementById('announceBgColor').value,
+        announcementTextColor: document.getElementById('announceTextColor').value
     }, { merge: true });
+    alert("Store settings instantly updated live!");
+}
+
+async function uploadAudio(inputId, firestoreKey) {
+    let fileInput = document.getElementById(inputId);
+    let btn = document.getElementById(inputId === 'adminAudioInput' ? 'saveAdminAudioBtn' : 'saveCustAudioBtn');
+    
+    if (fileInput.files.length === 0) { alert("Please select an audio file first."); return; }
+    
+    btn.innerText = "Uploading Audio...";
+    btn.disabled = true;
+
+    try {
+        const file = fileInput.files[0];
+        const storageRef = storage.ref();
+        const audioRef = storageRef.child(`audio_settings/${Date.now()}_${file.name}`);
+        await audioRef.put(file);
+        let url = await audioRef.getDownloadURL();
+        
+        let updateData = {};
+        updateData[firestoreKey] = url;
+        await db.collection("settings").doc("store").set(updateData, {merge: true});
+        
+        alert("✅ Custom Audio Live Updated!");
+        fileInput.value = ""; 
+    } catch (e) {
+        console.error("Error uploading audio", e);
+        alert("Error uploading audio. Ensure Storage Rules allow it.");
+    } finally {
+        btn.innerText = "💾 Save Sound";
+        btn.disabled = false;
+    }
 }
 
 /* ================================
@@ -310,38 +385,27 @@ db.collection("settings").doc("payment").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
         if(data.upiId) document.getElementById('adminUpiInput').value = data.upiId;
-        if(data.qrUrl) document.getElementById('currentQrPreview').src = data.qrUrl;
     }
 });
-
 async function savePaymentSettings() {
     let upiId = document.getElementById('adminUpiInput').value.trim();
     let fileInput = document.getElementById('adminQrInput');
     let btn = document.getElementById('saveSettingsBtn');
-    
     if(!upiId) { alert("Please enter your UPI ID"); return; }
-    btn.innerText = "Saving & Uploading...";
-    btn.disabled = true;
-
+    btn.innerText = "Saving & Uploading..."; btn.disabled = true;
     try {
         let updateData = { upiId: upiId };
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
-            const storageRef = storage.ref();
-            const qrRef = storageRef.child(`admin_settings/qr_code_${Date.now()}_${file.name}`);
+            const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`);
             await qrRef.put(file);
             updateData.qrUrl = await qrRef.getDownloadURL();
         }
         await db.collection("settings").doc("payment").set(updateData, {merge: true});
         alert("✅ Payment Settings Live Updated!");
         fileInput.value = ""; 
-    } catch (e) {
-        console.error("Error saving settings", e);
-        alert("Error saving settings. Ensure your Storage Rules are set correctly.");
-    } finally {
-        btn.innerText = "💾 Save Payment Settings";
-        btn.disabled = false;
-    }
+    } catch (e) { alert("Error saving settings"); } 
+    finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 
 /* ================================
@@ -349,37 +413,34 @@ async function savePaymentSettings() {
 ================================ */
 let initialLoadDone = false;
 
-db.collection("orders")
-  .orderBy("createdAt", "desc")
-  .onSnapshot(snapshot => {
-
+db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
     document.getElementById('dashboardList').innerHTML = "";
     document.getElementById('deliveryList').innerHTML = "";
 
     snapshot.docChanges().forEach(change => {
-        if(change.type === "added" && initialLoadDone) { playAlert(); }
+        if(change.type === "added" && initialLoadDone) { 
+            let o = change.doc.data();
+            let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
+            playAlert(`Order #${displayId} from ${o.userName || "Customer"} - ₹${o.total}`); 
+        }
     });
 
     snapshot.forEach(doc => {
         let o = doc.data();
-        
         let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
-        
-        let callButtonHTML = "";
-        if (o.userPhone) {
-            callButtonHTML = `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Customer</a>`;
-        }
-
+        let callButtonHTML = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Customer</a>` : "";
         let paymentInfo = `<b>Payment:</b> ${o.payment}`;
         if (o.payment === "ONLINE" && o.paymentScreenshot) {
             paymentInfo += `<br><button onclick="event.stopPropagation(); viewScreenshot('${o.paymentScreenshot}')" style="background: #eefce9; color: #16a34a; border: 1px solid #16a34a; width: auto; padding: 6px 12px; margin-top: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📸 Verify Screenshot</button>`;
         }
 
+        let statusColor = o.status === 'rejected' ? 'red' : (o.status === 'pending' ? '#f59e0b' : 'green');
+
         let html = `
         <div class="card" onclick="openOrder('${doc.id}')">
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                 <b style="font-size: 17px;">#${displayId} - ${o.userName || "Customer"}</b>
-                <span style="color: ${o.status === 'pending' ? 'red' : 'green'}; font-weight:bold;">${o.status}</span>
+                <span style="color: ${statusColor}; font-weight:bold; text-transform:capitalize;">${o.status}</span>
             </div>
             ${paymentInfo}
             <div style="margin-top: 5px;">${callButtonHTML}</div>
@@ -388,7 +449,6 @@ db.collection("orders")
         document.getElementById('dashboardList').innerHTML += html;
         if(o.status === "out for delivery"){ document.getElementById('deliveryList').innerHTML += html; }
     });
-
     initialLoadDone = true;
 });
 
@@ -399,11 +459,9 @@ db.collection("orders")
 function openOrder(id) {
     stopAlert();
     selectedOrderId = id;
-
     db.collection("orders").doc(id).get().then(doc => {
         let o = doc.data();
         let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
-        
         document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
 
         let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
@@ -435,32 +493,20 @@ function updateStatus() {
 }
 
 function closeModal() { document.getElementById('orderModal').style.display = "none"; }
-
-
-/* ================================
-   SCREENSHOT VERIFICATION POPUP
-================================ */
-function viewScreenshot(url) {
-    document.getElementById('previewScreenshot').src = url;
-    document.getElementById('screenshotModal').style.display = "flex";
-}
-
-function closeScreenshotModal() {
-    document.getElementById('screenshotModal').style.display = "none";
-    document.getElementById('previewScreenshot').src = "";
-}
-
+function viewScreenshot(url) { document.getElementById('previewScreenshot').src = url; document.getElementById('screenshotModal').style.display = "flex"; }
+function closeScreenshotModal() { document.getElementById('screenshotModal').style.display = "none"; document.getElementById('previewScreenshot').src = ""; }
 
 /* ================================
-   ITEMS MANAGEMENT
+   ITEMS MANAGEMENT (WITH DESCRIPTIONS)
 ================================ */
 function saveItem() {
     let name = document.getElementById('nameInput').value;
     let price = document.getElementById('priceInput').value;
     let image = document.getElementById('imageInput').value;
+    let desc = document.getElementById('descInput').value;
 
-    if(!name || !price) { alert("Fill all fields"); return; }
-    let data = { name, price: Number(price), image };
+    if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
+    let data = { name, price: Number(price), image, description: desc };
 
     if(editId) {
         db.collection("items").doc(editId).update(data);
@@ -472,35 +518,37 @@ function saveItem() {
     document.getElementById('nameInput').value = "";
     document.getElementById('priceInput').value = "";
     document.getElementById('imageInput').value = "";
+    document.getElementById('descInput').value = "";
 }
 
 db.collection("items").onSnapshot(snap => {
     document.getElementById('itemsList').innerHTML = "";
     snap.forEach(doc => {
         let i = doc.data();
+        let descHtml = i.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">${i.description}</div>` : "";
         document.getElementById('itemsList').innerHTML += `
         <div class="card">
-            <b>${i.name}</b> - ₹${i.price}<br>
+            <b>${i.name}</b> - ₹${i.price}
+            ${descHtml}
             <img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;">
             <br><br>
-            <button class="edit" onclick="editItem('${doc.id}','${i.name}',${i.price},'${i.image}')">Edit</button>
+            <button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}')">Edit</button>
             <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
         </div>`;
     });
 });
 
-function editItem(id, n, p, img) {
+function editItem(id, n, p, img, desc) {
     editId = id;
     document.getElementById('nameInput').value = n;
     document.getElementById('priceInput').value = p;
     document.getElementById('imageInput').value = img;
+    document.getElementById('descInput').value = desc;
     window.scrollTo(0, 0);
 }
 
 function deleteItem(id) {
-    if(confirm("Are you sure you want to delete this item?")) {
-        db.collection("items").doc(id).delete();
-    }
+    if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); }
 }
 </script>
 
