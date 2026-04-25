@@ -2,23 +2,32 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - Master Dispatch</title>
+<title>Master Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body { margin: 0; font-family: Arial; background: #f5f5f5; }
-header { background: #111; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3);}
+
+/* HEADER & MENU */
+header { background: #111; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3); height: 65px; box-sizing: border-box; }
 
 /* Audio & Notification Unlock Banner */
-#unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+#unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1001; position: relative;}
 
-.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 10000; }
+.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 10000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
 .menu.open { left: 0; }
 .menu-header { background: #111; color: white; padding: 20px; }
 .menu-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #333;}
 .menu-item:hover { background: #f9f9f9; }
-
 #overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 9999; }
+
+/* HEADER TOGGLE SWITCH */
+.header-switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+.header-switch input { opacity: 0; width: 0; height: 0; }
+.header-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #dc2626; transition: .3s; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+.header-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .header-slider { background-color: #ffffff; }
+input:checked + .header-slider:before { transform: translateX(18px); background-color: #16a34a; }
 
 .container { padding: 15px; padding-bottom: 100px; }
 
@@ -35,10 +44,9 @@ button:hover { opacity: 0.9; }
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10001; }
 .box { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;}
 
-/* Call Button */
 .btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; text-align: center; }
 
-/* IOS Style Toggles */
+/* Settings Toggles */
 .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
 .setting-row:last-child { border-bottom: none; }
 .switch { position: relative; display: inline-block; width: 54px; height: 30px; flex-shrink: 0; }
@@ -65,9 +73,21 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
     🔔 Click here to Enable Max Audio & Push Notifications
 </div>
 
-<header>
-    <span style="font-size: 22px; cursor: pointer;" onclick="openMenu()">☰</span>
-    <b>Admin Dispatch Panel</b>
+<header id="mainHeader">
+    <div id="headerLeft" style="display: flex; align-items: center; gap: 15px;">
+        <span style="font-size: 24px; cursor: pointer;" onclick="openMenu()">☰</span>
+        <b style="font-size: 18px;">Admin Dispatch</b>
+    </div>
+    
+    <div id="headerRight">
+        <div style="display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 20px;">
+            <span id="headerStoreStatusText" style="font-size: 14px; font-weight: bold; color: #16a34a;">Store Open</span>
+            <label class="header-switch">
+                <input type="checkbox" id="headerStoreToggle" onchange="toggleStoreStatus()">
+                <span class="header-slider"></span>
+            </label>
+        </div>
+    </div>
 </header>
 
 <div id="overlay" onclick="closeMenu()"></div>
@@ -114,11 +134,7 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
         <h3 style="color:#333; margin-top:0;">Master Power Controls</h3>
         <div class="card" style="cursor: default;">
             <div class="setting-row">
-                <div><b style="font-size: 16px;">Store Status</b><div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div></div>
-                <label class="switch"><input type="checkbox" id="toggleStore" onchange="updateStoreSettings()"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-                <div><b style="font-size: 16px;">Auto-Assign Drivers</b><div style="font-size: 13px; color: #666;">System assigns closest driver automatically</div></div>
+                <div><b style="font-size: 16px;">Auto-Assign Drivers</b><div style="font-size: 13px; color: #666;">Assigns driver automatically when marked "Out for Delivery"</div></div>
                 <label class="switch"><input type="checkbox" id="toggleAutoAssign" onchange="updateStoreSettings()"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
@@ -229,7 +245,6 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-// IMPORTANT: Add your admin email here
 const ADMIN_EMAIL = "myeswanthreddy321@gmail.com";
 
 const config = {
@@ -245,8 +260,9 @@ const auth = firebase.auth();
 const storage = firebase.storage();
 
 let selectedOrderId = null;
+let currentOrderDriverId = null; // Helps us know if an order already has a driver
 let editId = null;
-let onlineDriversList = []; // Array of currently online & unsuspended drivers
+let onlineDriversList = []; 
 let isAutoAssignEnabled = false;
 
 /* ================================
@@ -322,22 +338,29 @@ db.collection("settings").doc("store").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
         
-        document.getElementById('toggleStore').checked = data.isStoreOpen !== false; 
+        let isStoreOpen = data.isStoreOpen !== false;
+        document.getElementById('toggleStore').checked = isStoreOpen; 
+        document.getElementById('headerStoreToggle').checked = isStoreOpen;
+        
+        let headerText = document.getElementById('headerStoreStatusText');
+        if(isStoreOpen) {
+            headerText.innerText = "Store Open"; headerText.style.color = "#16a34a";
+        } else {
+            headerText.innerText = "Store Closed"; headerText.style.color = "#dc2626";
+        }
+
         document.getElementById('toggleCOD').checked = data.allowCOD !== false;      
         document.getElementById('toggleOnline').checked = data.allowOnline !== false;
         
-        // Auto Assign Logic
         isAutoAssignEnabled = data.autoAssign === true;
         document.getElementById('toggleAutoAssign').checked = isAutoAssignEnabled;
 
-        // Promo Logic
         document.getElementById('togglePromo').checked = data.isPromoActive === true;
         if(data.promoImageUrl) {
             document.getElementById('promoPreview').src = data.promoImageUrl;
             document.getElementById('promoPreview').style.display = "block";
         }
 
-        // Announcement
         if(data.announcementText) document.getElementById('announceText').value = data.announcementText;
         if(data.announcementBgColor) document.getElementById('announceBgColor').value = data.announcementBgColor;
         if(data.announcementTextColor) document.getElementById('announceTextColor').value = data.announcementTextColor;
@@ -345,10 +368,19 @@ db.collection("settings").doc("store").onSnapshot(doc => {
         if(data.adminAlertSoundUrl) { alarmAudio.src = data.adminAlertSoundUrl; }
     } else {
         document.getElementById('toggleStore').checked = true;
+        document.getElementById('headerStoreToggle').checked = true;
         document.getElementById('toggleCOD').checked = true;
         document.getElementById('toggleOnline').checked = true;
     }
 });
+
+// Used by both the header toggle and the settings toggle
+function toggleStoreStatus() {
+    // If called from header, update the DB with the header switch state
+    db.collection("settings").doc("store").set({
+        isStoreOpen: document.getElementById('headerStoreToggle').checked
+    }, { merge: true });
+}
 
 function updateStoreSettings() {
     db.collection("settings").doc("store").set({
@@ -414,13 +446,11 @@ db.collection("drivers").onSnapshot(snap => {
         let isSuspended = d.isSuspended || false;
         let isOnline = d.isOnline || false;
 
-        // Build Badge
         let badge = "";
         if (isSuspended) badge = `<span class="badge badge-suspended">Suspended</span>`;
         else if (isOnline) badge = `<span class="badge badge-online">🟢 Online</span>`;
         else badge = `<span class="badge badge-offline">⚫ Offline</span>`;
 
-        // Build Action Button
         let suspendAction = isSuspended ? false : true;
         let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver";
         let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
@@ -437,7 +467,6 @@ db.collection("drivers").onSnapshot(snap => {
             </div>
         </div>`;
 
-        // Populate Assignment Dropdown & Global Online Array
         if (isOnline && !isSuspended && d.phone) {
             onlineDriversList.push({ id: doc.id, name: d.name, phone: d.phone });
             selectHTML += `<option value="${doc.id}|${d.phone}">${d.name} (${d.phone})</option>`;
@@ -453,7 +482,7 @@ function toggleDriverSuspension(driverId, suspendState) {
 }
 
 /* ================================
-   LOAD ORDERS & AUTO-ASSIGN
+   LOAD ORDERS & ALERTS
 ================================ */
 let initialLoadDone = false;
 
@@ -464,33 +493,16 @@ db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         let o = change.doc.data();
         let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
         
-        // Play Alert on new order
         if(change.type === "added" && initialLoadDone) { 
             playAlert(`Order #${displayId} from ${o.userName || "Customer"} - ₹${o.total}`); 
-        }
-
-        // --- MASTER AUTO-ASSIGN LOGIC ---
-        // If an order is pending, auto-assign is ON, and it has no driver yet
-        if (change.type === "added" && isAutoAssignEnabled && o.status === "pending" && !o.driverId) {
-            if (onlineDriversList.length > 0) {
-                // Simplistic: Pick the first available online driver
-                let chosenDriver = onlineDriversList[0];
-                db.collection("orders").doc(change.doc.id).update({
-                    driverId: chosenDriver.id,
-                    driverPhone: chosenDriver.phone,
-                    driverName: chosenDriver.name
-                }).then(() => console.log(`Auto-assigned #${displayId} to ${chosenDriver.name}`));
-            }
         }
     });
 
     snapshot.forEach(doc => {
         let o = doc.data();
         let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
-        
         let customerCall = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Cust.</a>` : "";
         
-        // Show assigned driver info directly on the card
         let driverInfo = o.driverId 
             ? `<div style="background: #eefce9; padding: 6px; border-radius: 6px; font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 8px; border: 1px solid #ccebc4;">🛵 Assigned: ${o.driverName || 'Partner'}</div>` 
             : `<div style="background: #fee2e2; padding: 6px; border-radius: 6px; font-size: 12px; color: #dc2626; font-weight: bold; margin-top: 8px; border: 1px dashed #fca5a5;">⚠️ Unassigned</div>`;
@@ -513,9 +525,8 @@ db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
     initialLoadDone = true;
 });
 
-
 /* ================================
-   ORDER MANAGEMENT 
+   ORDER MANAGEMENT & SMART AUTO-ASSIGN
 ================================ */
 function openOrder(id) {
     stopAlert();
@@ -524,12 +535,12 @@ function openOrder(id) {
         let o = doc.data();
         let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
         document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
+        
+        currentOrderDriverId = o.driverId || null; // Track if it has a driver
 
-        // Set the Dropdown to the currently assigned driver
         let driverSelect = document.getElementById('driverSelect');
         if (o.driverId && o.driverPhone) {
             let val = `${o.driverId}|${o.driverPhone}`;
-            // If the driver is currently offline, their option won't exist in the select natively. We add it safely.
             if (!Array.from(driverSelect.options).some(opt => opt.value === val)) {
                 driverSelect.innerHTML += `<option value="${val}">${o.driverName || 'Partner'} (${o.driverPhone}) - Offline</option>`;
             }
@@ -558,34 +569,41 @@ function openOrder(id) {
         `;
 
         document.getElementById('statusSelect').value = o.status;
-        
-        // Hide Manual Dispatch area if auto-assign is on
         document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
-
         document.getElementById('orderModal').style.display = "flex";
     });
 }
 
 function updateStatus() {
     let status = document.getElementById('statusSelect').value;
-    
     let updatePayload = { status: status };
 
-    // If manual assignment is open, check the dropdown
     if (!isAutoAssignEnabled) {
+        // MANUAL ASSIGNMENT LOGIC
         let selectedDriver = document.getElementById('driverSelect').value;
         if (selectedDriver) {
             let parts = selectedDriver.split('|');
             let selText = document.getElementById('driverSelect').options[document.getElementById('driverSelect').selectedIndex].text;
-            let dName = selText.split(' (')[0]; // Extract name
+            let dName = selText.split(' (')[0]; 
             updatePayload.driverId = parts[0];
             updatePayload.driverPhone = parts[1];
             updatePayload.driverName = dName;
         } else {
-            // They cleared it
             updatePayload.driverId = firebase.firestore.FieldValue.delete();
             updatePayload.driverPhone = firebase.firestore.FieldValue.delete();
             updatePayload.driverName = firebase.firestore.FieldValue.delete();
+        }
+    } 
+    else if (status === "out for delivery" && !currentOrderDriverId) {
+        // NEW: SMART AUTO-ASSIGN LOGIC (Triggered when marked "Out for delivery")
+        if (onlineDriversList.length > 0) {
+            let chosenDriver = onlineDriversList[0];
+            updatePayload.driverId = chosenDriver.id;
+            updatePayload.driverPhone = chosenDriver.phone;
+            updatePayload.driverName = chosenDriver.name;
+            alert(`Auto-assigned order to ${chosenDriver.name}!`);
+        } else {
+            alert("Warning: Order marked 'Out for Delivery', but NO DRIVERS ARE ONLINE. It is currently unassigned.");
         }
     }
 
@@ -609,12 +627,8 @@ function saveItem() {
     if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
     let data = { name, price: Number(price), image, description: desc };
 
-    if(editId) {
-        db.collection("items").doc(editId).update(data);
-        editId = null;
-    } else {
-        db.collection("items").add(data);
-    }
+    if(editId) { db.collection("items").doc(editId).update(data); editId = null; } 
+    else { db.collection("items").add(data); }
 
     document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = "";
 }
@@ -642,7 +656,7 @@ function deleteItem(id) { if(confirm("Are you sure you want to delete this item?
 db.collection("settings").doc("payment").onSnapshot(doc => { if(doc.exists && doc.data().upiId) document.getElementById('adminUpiInput').value = doc.data().upiId; });
 async function savePaymentSettings() {
     let upiId = document.getElementById('adminUpiInput').value.trim(); let fileInput = document.getElementById('adminQrInput'); let btn = document.getElementById('saveSettingsBtn');
-    if(!upiId) { alert("Please enter your UPI ID"); return; } btn.innerText = "Saving & Uploading..."; btn.disabled = true;
+    if(!upiId) { alert("Please enter your UPI ID"); return; } btn.innerText = "Saving..."; btn.disabled = true;
     try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); alert("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings"); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 </script>
