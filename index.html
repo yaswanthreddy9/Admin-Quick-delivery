@@ -34,6 +34,7 @@ input:checked + .header-slider:before { transform: translateX(18px); background-
 .card-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px;}
 
 input[type="text"], input[type="number"], input[type="file"], textarea, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-family: Arial; font-size: 14px;}
+input[type="date"] { font-family: Arial; }
 
 button { padding: 12px 15px; border: none; border-radius: 8px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s;}
 button:hover { opacity: 0.9; }
@@ -73,6 +74,11 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 #partnerMapModal { padding: 0; overflow: hidden; background: #eee; }
 #partnerMap { height: 100%; width: 100%; }
 .map-overlay-panel { position: absolute; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-radius: 20px 20px 0 0; box-shadow: 0 -3px 20px rgba(0,0,0,0.15); box-sizing: border-box; z-index: 10; text-align: center; }
+
+/* NEW ANALYTICS STAT CARDS */
+.stat-card { flex: 1; min-width: 80px; padding: 12px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.stat-title { font-size: 11px; font-weight: bold; opacity: 0.9; text-transform: uppercase; margin-bottom: 5px; white-space: nowrap;}
+.stat-value { font-size: 22px; font-weight: 900; }
 </style>
 </head>
 
@@ -105,9 +111,10 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 
 <div id="menu" class="menu">
     <div class="menu-header"><h3>Control Center</h3></div>
-    <div class="menu-item" onclick="showSection('dashboardSection')">📊 Live Dashboard</div>
+    <div class="menu-item" onclick="showSection('dashboardSection')">⚡ Live Dashboard</div>
+    <div class="menu-item" onclick="showSection('ordersSection')">📜 Orders & Analytics</div>
     <div class="menu-item" onclick="showSection('dispatchSection')">👨‍✈️ Delivery Partners</div>
-    <div class="menu-item" onclick="showSection('itemsSection')">📋 Menu Items</div>
+    <div class="menu-item" onclick="showSection('itemsSection')">🍗 Menu Items</div>
     <div class="menu-item" onclick="showSection('settingsSection')">⚙️ Store Settings</div>
     <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
@@ -115,8 +122,49 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 <div class="container">
     
     <div id="dashboardSection">
-        <h3 style="color:#333; margin-top:0;">Live Orders</h3>
+        <h3 style="color:#333; margin-top:0;">Live Active Orders</h3>
+        <p style="font-size: 13px; color: #666; margin-top:-10px;">Showing only Pending, Preparing, and Out for Delivery.</p>
         <div id="dashboardList"></div>
+    </div>
+
+    <div id="ordersSection" style="display:none">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+            <h3 style="color:#333; margin:0;">Analytics Dashboard</h3>
+            <div style="display:flex; align-items:center; gap: 5px; background: #eefce9; padding: 6px 10px; border-radius: 8px; border: 1px solid #16a34a;">
+                <span style="font-size:16px;">📅</span>
+                <input type="date" id="historyDateFilter" style="border:none; background:transparent; font-weight:bold; color:#16a34a; outline:none; padding:0;" onchange="renderOrdersHistory()">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+            <div class="stat-card" style="background:#2563eb;">
+                <div class="stat-title">All-Time</div>
+                <div class="stat-value" id="statTotalAll">0</div>
+            </div>
+            <div class="stat-card" style="background:#16a34a;">
+                <div class="stat-title">Selected Date</div>
+                <div class="stat-value" id="statToday">0</div>
+            </div>
+            <div class="stat-card" style="background:#f59e0b;">
+                <div class="stat-title">Remaining</div>
+                <div class="stat-value" id="statRemaining">0</div>
+            </div>
+            <div class="stat-card" style="background:#dc2626;">
+                <div class="stat-title">Rejected</div>
+                <div class="stat-value" id="statRejected">0</div>
+            </div>
+        </div>
+
+        <button onclick="openSalesModal()" style="width:100%; margin-bottom:20px; background:#8b5cf6; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);">💰 View Total Sales for Selected Date</button>
+
+        <h4 style="border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top:25px;">⏳ Open Orders</h4>
+        <div id="historyOpenList"></div>
+
+        <h4 style="border-bottom: 2px solid #16a34a; padding-bottom: 5px; color:#16a34a; margin-top:25px;">✅ Delivered</h4>
+        <div id="historyDeliveredList"></div>
+
+        <h4 style="border-bottom: 2px solid #dc2626; padding-bottom: 5px; color:#dc2626; margin-top:25px;">❌ Rejected</h4>
+        <div id="historyRejectedList"></div>
     </div>
 
     <div id="dispatchSection" style="display:none">
@@ -135,11 +183,11 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
                     <label style="font-size: 12px; font-weight: bold; color: #666;">Total Stock Available</label>
-                    <input type="number" id="stockInput" placeholder="e.g. 50 (Leave empty for unlimited)">
+                    <input type="number" id="stockInput" placeholder="e.g. 50 (Unlimited)">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: bold; color: #666;">Max Quantity Per User</label>
-                    <input type="number" id="limitInput" placeholder="e.g. 2 (Leave empty for no limit)">
+                    <label style="font-size: 12px; font-weight: bold; color: #666;">Max Qty Per User</label>
+                    <input type="number" id="limitInput" placeholder="e.g. 2 (No limit)">
                 </div>
             </div>
             
@@ -258,6 +306,33 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
     </div>
 </div>
 
+<div id="salesModal" class="modal">
+    <div class="box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Sales Report</h2>
+            <b style="font-size: 24px; cursor: pointer; color: #888;" onclick="closeSalesModal()">✕</b>
+        </div>
+        <p id="salesDateText" style="color:#666; font-weight:bold; margin-top:-5px; font-size: 14px;"></p>
+        
+        <div style="background:#f9f9f9; padding:20px; border-radius:12px; margin-bottom:15px; border: 1px solid #eee;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <span style="font-size:16px;">Cash on Delivery (COD)</span>
+                <b id="salesCodText" style="color:#dc2626; font-size:16px;">₹0</b>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <span style="font-size:16px;">Online Paid (UPI)</span>
+                <b id="salesOnlineText" style="color:#2563eb; font-size:16px;">₹0</b>
+            </div>
+            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:20px;">
+                <b>Total Revenue</b>
+                <b id="salesTotalText" style="color:#16a34a;">₹0</b>
+            </div>
+        </div>
+        <button style="width:100%; background:#eee; color:#333;" onclick="closeSalesModal()">Close Report</button>
+    </div>
+</div>
+
 <div id="driverMapModal" class="modal">
     <div class="box" id="partnerMapModal">
         <div id="partnerMap"></div>
@@ -303,7 +378,18 @@ let editId = null;
 let onlineDriversList = []; 
 let isAutoAssignEnabled = false;
 
-// TOAST NOTIFICATIONS
+let globalOrders = []; // Stores all fetched orders for Analytics
+
+// Get Local Date String (YYYY-MM-DD) safely
+function getLocalDateStr(dateObj) {
+    const offset = dateObj.getTimezoneOffset() * 60000;
+    return new Date(dateObj.getTime() - offset).toISOString().split('T')[0];
+}
+
+// Set Default Date
+document.getElementById('historyDateFilter').value = getLocalDateStr(new Date());
+
+
 function showToast(message) {
     let container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -341,17 +427,6 @@ async function unlockPermissions() {
     }).catch(err => { console.log(err); });
 
     if ("Notification" in window) { Notification.requestPermission(); }
-
-    if ('wakeLock' in navigator) {
-        try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            document.addEventListener('visibilitychange', async () => {
-                if (wakeLock !== null && document.visibilityState === 'visible') {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                }
-            });
-        } catch (err) {}
-    }
 }
 
 function updateVolume() { alarmAudio.volume = document.getElementById('adminVolume').value; }
@@ -383,62 +458,43 @@ function openMenu() { document.getElementById('menu').classList.add("open"); doc
 function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
 function showSection(sectionId) {
-    const sections = ['dashboardSection', 'dispatchSection', 'itemsSection', 'settingsSection'];
+    const sections = ['dashboardSection', 'ordersSection', 'dispatchSection', 'itemsSection', 'settingsSection'];
     sections.forEach(id => document.getElementById(id).style.display = 'none');
     document.getElementById(sectionId).style.display = 'block';
     closeMenu();
 }
 
 /* ================================
-   STORE SETTINGS & PROMO UPLOAD
+   STORE SETTINGS
 ================================ */
 db.collection("settings").doc("store").onSnapshot(doc => {
     if(doc.exists) {
         let data = doc.data();
-        
         let isStoreOpen = data.isStoreOpen !== false;
         document.getElementById('toggleStore').checked = isStoreOpen; 
         document.getElementById('headerStoreToggle').checked = isStoreOpen;
         
         let headerText = document.getElementById('headerStoreStatusText');
-        if(isStoreOpen) {
-            headerText.innerText = "Store Open"; headerText.style.color = "#16a34a";
-        } else {
-            headerText.innerText = "Store Closed"; headerText.style.color = "#dc2626";
-        }
+        if(isStoreOpen) { headerText.innerText = "Store Open"; headerText.style.color = "#16a34a"; } 
+        else { headerText.innerText = "Store Closed"; headerText.style.color = "#dc2626"; }
 
         document.getElementById('toggleCOD').checked = data.allowCOD !== false;      
         document.getElementById('toggleOnline').checked = data.allowOnline !== false;
         
         isAutoAssignEnabled = data.autoAssign === true;
         document.getElementById('toggleAutoAssign').checked = isAutoAssignEnabled;
-
         document.getElementById('togglePromo').checked = data.isPromoActive === true;
-        if(data.promoImageUrl) {
-            document.getElementById('promoPreview').src = data.promoImageUrl;
-            document.getElementById('promoPreview').style.display = "block";
-        }
-
+        if(data.promoImageUrl) { document.getElementById('promoPreview').src = data.promoImageUrl; document.getElementById('promoPreview').style.display = "block"; }
         if(data.announcementText) document.getElementById('announceText').value = data.announcementText;
         if(data.announcementBgColor) document.getElementById('announceBgColor').value = data.announcementBgColor;
         if(data.announcementTextColor) document.getElementById('announceTextColor').value = data.announcementTextColor;
-
         if(data.adminAlertSoundUrl) { alarmAudio.src = data.adminAlertSoundUrl; }
-    } else {
-        document.getElementById('toggleStore').checked = true;
-        document.getElementById('headerStoreToggle').checked = true;
-        document.getElementById('toggleCOD').checked = true;
-        document.getElementById('toggleOnline').checked = true;
     }
 });
 
 function toggleStoreStatus() {
     let isOpen = document.getElementById('headerStoreToggle').checked;
-    db.collection("settings").doc("store").set({
-        isStoreOpen: isOpen
-    }, { merge: true }).then(() => {
-        showToast(isOpen ? "✅ Store is now OPEN" : "🚫 Store is now CLOSED");
-    }).catch(e => alert("Permission Error: " + e.message));
+    db.collection("settings").doc("store").set({ isStoreOpen: isOpen }, { merge: true }).then(() => { showToast(isOpen ? "✅ Store is now OPEN" : "🚫 Store is now CLOSED"); }).catch(e => alert("Permission Error: " + e.message));
 }
 
 function updateStoreSettings() {
@@ -451,157 +507,80 @@ function updateStoreSettings() {
         announcementText: document.getElementById('announceText').value.trim(),
         announcementBgColor: document.getElementById('announceBgColor').value,
         announcementTextColor: document.getElementById('announceTextColor').value
-    }, { merge: true })
-    .then(()=> showToast("✅ Settings Updated Live!"))
-    .catch(e => alert("Permission Error: Are you logged in as Admin? " + e.message));
+    }, { merge: true }).then(()=> showToast("✅ Settings Updated Live!")).catch(e => alert("Permission Error"));
 }
 
 async function uploadPromoImage() {
-    let fileInput = document.getElementById('promoImageInput');
-    let btn = document.getElementById('savePromoBtn');
+    let fileInput = document.getElementById('promoImageInput'); let btn = document.getElementById('savePromoBtn');
     if (fileInput.files.length === 0) { alert("Please select an image first."); return; }
-    
     btn.innerText = "Uploading Image..."; btn.disabled = true;
     try {
-        const file = fileInput.files[0];
-        const ref = storage.ref().child(`promo_images/${Date.now()}_${file.name}`);
-        await ref.put(file);
-        let url = await ref.getDownloadURL();
+        const file = fileInput.files[0]; const ref = storage.ref().child(`promo_images/${Date.now()}_${file.name}`);
+        await ref.put(file); let url = await ref.getDownloadURL();
         await db.collection("settings").doc("store").set({ promoImageUrl: url, isPromoActive: true }, {merge: true});
-        document.getElementById('togglePromo').checked = true;
-        showToast("✨ Promo Image Live Updated!");
-        fileInput.value = ""; 
-    } catch (e) { alert("Error uploading image: " + e.message); } 
-    finally { btn.innerText = "✨ Upload & Set Promo"; btn.disabled = false; }
+        document.getElementById('togglePromo').checked = true; showToast("✨ Promo Image Live Updated!"); fileInput.value = ""; 
+    } catch (e) { alert("Error uploading image"); } finally { btn.innerText = "✨ Upload & Set Promo"; btn.disabled = false; }
 }
 
 async function uploadAudio(inputId, firestoreKey) {
-    let fileInput = document.getElementById(inputId);
-    let btn = document.getElementById(inputId === 'adminAudioInput' ? 'saveAdminAudioBtn' : 'saveCustAudioBtn');
+    let fileInput = document.getElementById(inputId); let btn = document.getElementById(inputId === 'adminAudioInput' ? 'saveAdminAudioBtn' : 'saveCustAudioBtn');
     if (fileInput.files.length === 0) { alert("Select an audio file first."); return; }
-    
     btn.innerText = "Uploading Audio..."; btn.disabled = true;
     try {
-        const file = fileInput.files[0];
-        const ref = storage.ref().child(`audio_settings/${Date.now()}_${file.name}`);
-        await ref.put(file);
-        let url = await ref.getDownloadURL();
+        const file = fileInput.files[0]; const ref = storage.ref().child(`audio_settings/${Date.now()}_${file.name}`);
+        await ref.put(file); let url = await ref.getDownloadURL();
         let updateData = {}; updateData[firestoreKey] = url;
         await db.collection("settings").doc("store").set(updateData, {merge: true});
-        showToast("✅ Custom Audio Live Updated!");
-        fileInput.value = ""; 
-    } catch (e) { alert("Error uploading audio: " + e.message); } 
-    finally { btn.innerText = "💾 Save Sound"; btn.disabled = false; }
+        showToast("✅ Custom Audio Live Updated!"); fileInput.value = ""; 
+    } catch (e) { alert("Error uploading audio"); } finally { btn.innerText = "💾 Save Sound"; btn.disabled = false; }
 }
 
 /* ================================
    DISPATCH: DRIVER MANAGEMENT & LIVE TRACKING
 ================================ */
-let trackingUnsubscribe = null;
-let adminMap = null;
-let adminPartnerMarker = null;
+let trackingUnsubscribe = null; let adminMap = null; let adminPartnerMarker = null;
 
 db.collection("drivers").onSnapshot(snap => {
-    onlineDriversList = [];
-    let listHTML = "";
-    let selectHTML = '<option value="">-- No Driver Assigned --</option>';
-
+    onlineDriversList = []; let listHTML = ""; let selectHTML = '<option value="">-- No Driver Assigned --</option>';
     snap.forEach(doc => {
-        let d = doc.data();
-        let isSuspended = d.isSuspended || false;
-        let isOnline = d.isOnline || false;
+        let d = doc.data(); let isSuspended = d.isSuspended || false; let isOnline = d.isOnline || false;
+        let badge = isSuspended ? `<span class="badge badge-suspended">Suspended</span>` : (isOnline ? `<span class="badge badge-online">🟢 Online</span>` : `<span class="badge badge-offline">⚫ Offline</span>`);
+        let suspendAction = isSuspended ? false : true; let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver"; let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
+        let trackBtnHTML = (isOnline && d.location && d.location.lat && !isSuspended) ? `<button onclick="openDriverTracking('${doc.id}', '${d.name || 'Partner'}')" style="background:#2563eb; padding: 8px 12px; font-size: 13px; margin-right: 5px;">📍 Track Live</button>` : "";
 
-        let badge = "";
-        if (isSuspended) badge = `<span class="badge badge-suspended">Suspended</span>`;
-        else if (isOnline) badge = `<span class="badge badge-online">🟢 Online</span>`;
-        else badge = `<span class="badge badge-offline">⚫ Offline</span>`;
-
-        let suspendAction = isSuspended ? false : true;
-        let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver";
-        let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
-
-        let trackBtnHTML = "";
-        if(isOnline && d.location && d.location.lat && !isSuspended) {
-            trackBtnHTML = `<button onclick="openDriverTracking('${doc.id}', '${d.name || 'Partner'}')" style="background:#2563eb; padding: 8px 12px; font-size: 13px; margin-right: 5px;">📍 Track Live</button>`;
-        }
-
-        listHTML += `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <b style="font-size: 16px;">${d.name || "Unknown"}</b><br>
-                <span style="font-size: 13px; color: #666;">📞 ${d.phone || "No Phone"}</span><br>
-                <div style="margin-top: 6px;">${badge}</div>
-            </div>
-            <div>
-                ${trackBtnHTML}
-                <button onclick="toggleDriverSuspension('${doc.id}', ${suspendAction})" style="background:${suspendBtnColor}; padding: 8px 12px; font-size: 13px;">${suspendBtnText}</button>
-            </div>
-        </div>`;
-
-        if (isOnline && !isSuspended && d.phone) {
-            onlineDriversList.push({ id: doc.id, name: d.name, phone: d.phone });
-            selectHTML += `<option value="${doc.id}|${d.phone}">${d.name} (${d.phone})</option>`;
-        }
+        listHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size: 16px;">${d.name || "Unknown"}</b><br><span style="font-size: 13px; color: #666;">📞 ${d.phone || "No Phone"}</span><br><div style="margin-top: 6px;">${badge}</div></div><div>${trackBtnHTML}<button onclick="toggleDriverSuspension('${doc.id}', ${suspendAction})" style="background:${suspendBtnColor}; padding: 8px 12px; font-size: 13px;">${suspendBtnText}</button></div></div>`;
+        if (isOnline && !isSuspended && d.phone) { onlineDriversList.push({ id: doc.id, name: d.name, phone: d.phone }); selectHTML += `<option value="${doc.id}|${d.phone}">${d.name} (${d.phone})</option>`; }
     });
-
-    document.getElementById('partnersList').innerHTML = listHTML;
-    document.getElementById('driverSelect').innerHTML = selectHTML;
+    document.getElementById('partnersList').innerHTML = listHTML; document.getElementById('driverSelect').innerHTML = selectHTML;
 });
 
-function toggleDriverSuspension(driverId, suspendState) {
-    db.collection("drivers").doc(driverId).update({ isSuspended: suspendState })
-    .then(() => showToast("Driver status updated!"))
-    .catch(e => alert("Error: " + e.message));
-}
+function toggleDriverSuspension(driverId, suspendState) { db.collection("drivers").doc(driverId).update({ isSuspended: suspendState }).then(() => showToast("Driver status updated!")).catch(e => alert("Error: " + e.message)); }
 
 function openDriverTracking(driverId, driverName) {
-    document.getElementById('trackingDriverName').innerText = `Tracking: ${driverName}`;
-    document.getElementById('driverMapModal').style.display = 'flex';
-    
+    document.getElementById('trackingDriverName').innerText = `Tracking: ${driverName}`; document.getElementById('driverMapModal').style.display = 'flex';
     if(typeof google === 'undefined') { alert("Google Maps failed to load."); return; }
-
     if(trackingUnsubscribe) trackingUnsubscribe(); 
-
     trackingUnsubscribe = db.collection("drivers").doc(driverId).onSnapshot(doc => {
-        if(!doc.exists) return;
-        let d = doc.data();
-        
-        if(!d.isOnline || d.isSuspended) {
-            document.getElementById('trackingDriverStatus').innerText = "Partner went offline.";
-            document.getElementById('trackingDriverStatus').style.color = "#dc2626";
-            return;
-        }
-
+        if(!doc.exists) return; let d = doc.data();
+        if(!d.isOnline || d.isSuspended) { document.getElementById('trackingDriverStatus').innerText = "Partner went offline."; document.getElementById('trackingDriverStatus').style.color = "#dc2626"; return; }
         if(d.location && d.location.lat) {
-            document.getElementById('trackingDriverStatus').innerText = "Live GPS Signal Connected";
-            document.getElementById('trackingDriverStatus').style.color = "#16a34a";
+            document.getElementById('trackingDriverStatus').innerText = "Live GPS Signal Connected"; document.getElementById('trackingDriverStatus').style.color = "#16a34a";
             let pos = { lat: d.location.lat, lng: d.location.lng };
-            
-            if(!adminMap) {
-                adminMap = new google.maps.Map(document.getElementById("partnerMap"), { center: pos, zoom: 16, disableDefaultUI: true });
-                adminPartnerMarker = new google.maps.Marker({ map: adminMap, icon: { url: "https://maps.google.com/mapfiles/kml/shapes/motorcycling.png", scaledSize: new google.maps.Size(35, 35) } });
-            }
-            adminPartnerMarker.setPosition(pos);
-            adminMap.panTo(pos);
-        } else {
-            document.getElementById('trackingDriverStatus').innerText = "Waiting for GPS signal...";
-        }
+            if(!adminMap) { adminMap = new google.maps.Map(document.getElementById("partnerMap"), { center: pos, zoom: 16, disableDefaultUI: true }); adminPartnerMarker = new google.maps.Marker({ map: adminMap, icon: { url: "https://maps.google.com/mapfiles/kml/shapes/motorcycling.png", scaledSize: new google.maps.Size(35, 35) } }); }
+            adminPartnerMarker.setPosition(pos); adminMap.panTo(pos);
+        } else { document.getElementById('trackingDriverStatus').innerText = "Waiting for GPS signal..."; }
     });
 }
-
-function closeDriverMap() {
-    document.getElementById('driverMapModal').style.display = 'none';
-    if(trackingUnsubscribe) { trackingUnsubscribe(); trackingUnsubscribe = null; }
-}
+function closeDriverMap() { document.getElementById('driverMapModal').style.display = 'none'; if(trackingUnsubscribe) { trackingUnsubscribe(); trackingUnsubscribe = null; } }
 
 /* ================================
-   LOAD ORDERS & ALERTS
+   LOAD ALL ORDERS (GLOBAL LISTENER)
 ================================ */
 let initialLoadDone = false;
 
 db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-    document.getElementById('dashboardList').innerHTML = "";
-
+    globalOrders = [];
+    
     snapshot.docChanges().forEach(change => {
         let o = change.doc.data();
         let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
@@ -614,76 +593,166 @@ db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
             if (onlineDriversList.length > 0) {
                 let chosenDriver = onlineDriversList[0];
                 db.collection("orders").doc(change.doc.id).update({
-                    driverId: chosenDriver.id,
-                    driverPhone: chosenDriver.phone,
-                    driverName: chosenDriver.name
+                    driverId: chosenDriver.id, driverPhone: chosenDriver.phone, driverName: chosenDriver.name
                 }).then(() => showToast(`Auto-assigned #${displayId} to ${chosenDriver.name}`));
             }
         }
     });
 
     snapshot.forEach(doc => {
-        let o = doc.data();
-        let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
-        let customerCall = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Cust.</a>` : "";
-        
-        let driverInfo = o.driverId 
-            ? `<div style="background: #eefce9; padding: 6px; border-radius: 6px; font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 8px; border: 1px solid #ccebc4;">🛵 Assigned: ${o.driverName || 'Partner'}</div>` 
-            : `<div style="background: #fee2e2; padding: 6px; border-radius: 6px; font-size: 12px; color: #dc2626; font-weight: bold; margin-top: 8px; border: 1px dashed #fca5a5;">⚠️ Unassigned</div>`;
-
-        let statusColor = o.status === 'rejected' ? 'red' : (o.status === 'pending' ? '#f59e0b' : 'green');
-
-        let html = `
-        <div class="card" onclick="openOrder('${doc.id}')">
-            <div class="card-header">
-                <b style="font-size: 17px;">#${displayId} - ${o.userName || "Customer"}</b>
-                <span style="color: ${statusColor}; font-weight:bold; text-transform:capitalize;">${o.status}</span>
-            </div>
-            <div style="font-size: 14px; color: #555;"><b>Payment:</b> ${o.payment}</div>
-            ${driverInfo}
-            <div style="margin-top: 8px;">${customerCall}</div>
-        </div>`;
-
-        document.getElementById('dashboardList').innerHTML += html;
+        globalOrders.push({ id: doc.id, ...doc.data() });
     });
+    
     initialLoadDone = true;
+    
+    // Render Both Screens
+    renderLiveDashboard();
+    renderOrdersHistory();
 });
 
+
 /* ================================
-   ORDER MANAGEMENT & SMART AUTO-ASSIGN
+   RENDER LIVE DASHBOARD (CLEAN)
+================================ */
+function generateOrderCardHTML(docId, o) {
+    let displayId = o.orderNumber ? o.orderNumber : docId.slice(0,6).toUpperCase();
+    let customerCall = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Cust.</a>` : "";
+    let driverInfo = o.driverId ? `<div style="background: #eefce9; padding: 6px; border-radius: 6px; font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 8px; border: 1px solid #ccebc4;">🛵 Assigned: ${o.driverName || 'Partner'}</div>` : `<div style="background: #fee2e2; padding: 6px; border-radius: 6px; font-size: 12px; color: #dc2626; font-weight: bold; margin-top: 8px; border: 1px dashed #fca5a5;">⚠️ Unassigned</div>`;
+    let statusColor = o.status === 'rejected' ? 'red' : (o.status === 'delivered' ? '#16a34a' : '#f59e0b');
+
+    return `
+    <div class="card" onclick="openOrder('${docId}')" style="padding: 14px; margin: 10px 0;">
+        <div class="card-header" style="margin-bottom: 5px; padding-bottom: 5px;">
+            <b style="font-size: 15px;">#${displayId} - ${o.userName || "Customer"}</b>
+            <span style="color: ${statusColor}; font-weight:bold; text-transform:capitalize; font-size: 13px;">${o.status}</span>
+        </div>
+        <div style="font-size: 13px; color: #555;"><b>Pay:</b> ${o.payment} | <b>Total:</b> ₹${o.total}</div>
+        ${(o.status !== 'delivered' && o.status !== 'rejected') ? driverInfo : ''}
+    </div>`;
+}
+
+function renderLiveDashboard() {
+    const list = document.getElementById('dashboardList');
+    list.innerHTML = "";
+    
+    // LIVE dashboard ONLY shows active orders
+    const activeOrders = globalOrders.filter(o => o.status !== "delivered" && o.status !== "rejected");
+    
+    if (activeOrders.length === 0) {
+        list.innerHTML = "<div style='text-align:center; padding:30px; color:#888;'>No active orders currently.<br>All caught up!</div>";
+        return;
+    }
+
+    activeOrders.forEach(o => {
+        list.innerHTML += generateOrderCardHTML(o.id, o);
+    });
+}
+
+/* ================================
+   NEW: RENDER ORDERS & ANALYTICS
+================================ */
+function renderOrdersHistory() {
+    let selectedDateStr = document.getElementById('historyDateFilter').value;
+    
+    let totalAllTimeDelivered = 0;
+    let selectedDayTotal = 0;
+    let selectedDayRemaining = 0;
+    let selectedDayRejected = 0;
+
+    let htmlOpen = "";
+    let htmlDelivered = "";
+    let htmlRejected = "";
+
+    globalOrders.forEach(o => {
+        if(o.status === "delivered") totalAllTimeDelivered++;
+        
+        let oDateStr = o.createdAt ? getLocalDateStr(o.createdAt.toDate()) : getLocalDateStr(new Date());
+        
+        if (oDateStr === selectedDateStr) {
+            // Analytics Counters
+            if (o.status !== "rejected") selectedDayTotal++; // Total valid orders that day
+            if (o.status === "pending" || o.status === "preparing" || o.status === "out for delivery") selectedDayRemaining++;
+            if (o.status === "rejected") selectedDayRejected++;
+
+            // Lists rendering
+            let card = generateOrderCardHTML(o.id, o);
+            if (o.status === "delivered") htmlDelivered += card;
+            else if (o.status === "rejected") htmlRejected += card;
+            else htmlOpen += card;
+        }
+    });
+
+    // Update Stats
+    document.getElementById('statTotalAll').innerText = totalAllTimeDelivered;
+    document.getElementById('statToday').innerText = selectedDayTotal;
+    document.getElementById('statRemaining').innerText = selectedDayRemaining;
+    document.getElementById('statRejected').innerText = selectedDayRejected;
+
+    // Update Lists
+    document.getElementById('historyOpenList').innerHTML = htmlOpen || "<div style='color:#888; font-size:13px;'>No open orders for this date.</div>";
+    document.getElementById('historyDeliveredList').innerHTML = htmlDelivered || "<div style='color:#888; font-size:13px;'>No delivered orders for this date.</div>";
+    document.getElementById('historyRejectedList').innerHTML = htmlRejected || "<div style='color:#888; font-size:13px;'>No rejected orders for this date.</div>";
+}
+
+/* ================================
+   NEW: SALES REPORT MODAL
+================================ */
+function openSalesModal() {
+    let selectedDateStr = document.getElementById('historyDateFilter').value;
+    let codTotal = 0;
+    let onlineTotal = 0;
+    
+    globalOrders.forEach(o => {
+        let oDateStr = o.createdAt ? getLocalDateStr(o.createdAt.toDate()) : getLocalDateStr(new Date());
+        
+        if (oDateStr === selectedDateStr && o.status === "delivered") {
+            let amt = Number(o.total) || 0;
+            if (o.payment === "COD" || o.payment === "Cash on Delivery") {
+                codTotal += amt;
+            } else {
+                onlineTotal += amt;
+            }
+        }
+    });
+
+    document.getElementById('salesDateText').innerText = `Data for: ${selectedDateStr}`;
+    document.getElementById('salesCodText').innerText = `₹${codTotal}`;
+    document.getElementById('salesOnlineText').innerText = `₹${onlineTotal}`;
+    document.getElementById('salesTotalText').innerText = `₹${codTotal + onlineTotal}`;
+
+    document.getElementById('salesModal').style.display = 'flex';
+}
+
+function closeSalesModal() {
+    document.getElementById('salesModal').style.display = 'none';
+}
+
+
+/* ================================
+   ORDER MANAGEMENT
 ================================ */
 function openOrder(id) {
-    stopAlert();
-    selectedOrderId = id;
+    stopAlert(); selectedOrderId = id;
     db.collection("orders").doc(id).get().then(doc => {
-        let o = doc.data();
-        let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
+        let o = doc.data(); let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
         document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
-        
         currentOrderDriverId = o.driverId || null; 
 
         let driverSelect = document.getElementById('driverSelect');
         if (o.driverId && o.driverPhone) {
             let val = `${o.driverId}|${o.driverPhone}`;
-            if (!Array.from(driverSelect.options).some(opt => opt.value === val)) {
-                driverSelect.innerHTML += `<option value="${val}">${o.driverName || 'Partner'} (${o.driverPhone}) - Offline</option>`;
-            }
+            if (!Array.from(driverSelect.options).some(opt => opt.value === val)) { driverSelect.innerHTML += `<option value="${val}">${o.driverName || 'Partner'} (${o.driverPhone}) - Offline</option>`; }
             driverSelect.value = val;
-        } else {
-            driverSelect.value = "";
-        }
+        } else { driverSelect.value = ""; }
 
         let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
-        if (o.payment === "ONLINE" && o.paymentScreenshot) {
-            paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`;
-        }
+        if (o.payment === "ONLINE" && o.paymentScreenshot) { paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`; }
         
         let callCust = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; margin-bottom: 5px;">📞 Call Customer: ${o.userPhone}</a>` : "";
         let callDriver = o.driverPhone ? `<a href="tel:${o.driverPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; background: #16a34a; border-color: #15803d; margin-bottom: 10px;">🛵 Call Driver: ${o.driverPhone}</a>` : "";
 
         document.getElementById('orderDetails').innerHTML = `
-            ${callCust}
-            ${callDriver}
+            ${callCust} ${callDriver}
             <p style="margin-top:0;"><b>Customer:</b> ${o.userName || "Guest"}</p>
             <p><b>Items:</b><br> ${o.items ? o.items.map(i=>`• ${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
             <hr>
@@ -693,9 +762,7 @@ function openOrder(id) {
         `;
 
         document.getElementById('statusSelect').value = o.status;
-        
         document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
-
         document.getElementById('orderModal').style.display = "flex";
     });
 }
@@ -707,34 +774,21 @@ function updateStatus() {
     if (!isAutoAssignEnabled) {
         let selectedDriver = document.getElementById('driverSelect').value;
         if (selectedDriver) {
-            let parts = selectedDriver.split('|');
-            let selText = document.getElementById('driverSelect').options[document.getElementById('driverSelect').selectedIndex].text;
-            let dName = selText.split(' (')[0]; 
-            updatePayload.driverId = parts[0];
-            updatePayload.driverPhone = parts[1];
-            updatePayload.driverName = dName;
+            let parts = selectedDriver.split('|'); let selText = document.getElementById('driverSelect').options[document.getElementById('driverSelect').selectedIndex].text;
+            updatePayload.driverId = parts[0]; updatePayload.driverPhone = parts[1]; updatePayload.driverName = selText.split(' (')[0]; 
         } else {
-            updatePayload.driverId = firebase.firestore.FieldValue.delete();
-            updatePayload.driverPhone = firebase.firestore.FieldValue.delete();
-            updatePayload.driverName = firebase.firestore.FieldValue.delete();
+            updatePayload.driverId = firebase.firestore.FieldValue.delete(); updatePayload.driverPhone = firebase.firestore.FieldValue.delete(); updatePayload.driverName = firebase.firestore.FieldValue.delete();
         }
     } 
     else if (status === "out for delivery" && !currentOrderDriverId) {
         if (onlineDriversList.length > 0) {
             let chosenDriver = onlineDriversList[0];
-            updatePayload.driverId = chosenDriver.id;
-            updatePayload.driverPhone = chosenDriver.phone;
-            updatePayload.driverName = chosenDriver.name;
+            updatePayload.driverId = chosenDriver.id; updatePayload.driverPhone = chosenDriver.phone; updatePayload.driverName = chosenDriver.name;
             showToast(`Auto-assigned order to ${chosenDriver.name}!`);
-        } else {
-            alert("Warning: Order marked 'Out for Delivery', but NO DRIVERS ARE ONLINE. It is currently unassigned.");
-        }
+        } else { alert("Warning: Order marked 'Out for Delivery', but NO DRIVERS ARE ONLINE. It is currently unassigned."); }
     }
 
-    db.collection("orders").doc(selectedOrderId).update(updatePayload)
-    .then(() => showToast("✅ Order Updated!"))
-    .catch(e => alert("Permission Error: " + e.message));
-    
+    db.collection("orders").doc(selectedOrderId).update(updatePayload).then(() => showToast("✅ Order Updated!")).catch(e => alert("Permission Error: " + e.message));
     closeModal();
 }
 
@@ -743,80 +797,38 @@ function viewScreenshot(url) { document.getElementById('previewScreenshot').src 
 function closeScreenshotModal() { document.getElementById('screenshotModal').style.display = "none"; document.getElementById('previewScreenshot').src = ""; }
 
 /* ================================
-   ITEMS MANAGEMENT (WITH STOCK & LIMIT)
+   ITEMS MANAGEMENT
 ================================ */
 function saveItem() {
-    let name = document.getElementById('nameInput').value;
-    let price = document.getElementById('priceInput').value;
-    let image = document.getElementById('imageInput').value;
-    let desc = document.getElementById('descInput').value;
-    
-    // Parse Stock and Limit. Use null if left empty to indicate unlimited.
-    let stockVal = document.getElementById('stockInput').value;
-    let limitVal = document.getElementById('limitInput').value;
+    let name = document.getElementById('nameInput').value; let price = document.getElementById('priceInput').value; let image = document.getElementById('imageInput').value; let desc = document.getElementById('descInput').value;
+    let stockVal = document.getElementById('stockInput').value; let limitVal = document.getElementById('limitInput').value;
 
     if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
-    
     let data = { name, price: Number(price), image, description: desc };
     
-    if(stockVal !== "") data.stock = parseInt(stockVal);
-    else data.stock = null; 
-
-    if(limitVal !== "") data.limit = parseInt(limitVal);
-    else data.limit = null;
+    if(stockVal !== "") data.stock = parseInt(stockVal); else data.stock = null; 
+    if(limitVal !== "") data.limit = parseInt(limitVal); else data.limit = null;
 
     if(editId) { db.collection("items").doc(editId).update(data).then(()=>showToast("Item Updated")); editId = null; } 
     else { db.collection("items").add(data).then(()=>showToast("Item Added")); }
 
-    document.getElementById('nameInput').value = ""; 
-    document.getElementById('priceInput').value = ""; 
-    document.getElementById('imageInput').value = ""; 
-    document.getElementById('descInput').value = ""; 
-    document.getElementById('stockInput').value = "";
-    document.getElementById('limitInput').value = "";
+    document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('stockInput').value = ""; document.getElementById('limitInput').value = "";
 }
 
 db.collection("items").onSnapshot(snap => {
     document.getElementById('itemsList').innerHTML = "";
     snap.forEach(doc => {
-        let i = doc.data();
-        let descHtml = i.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">${i.description}</div>` : "";
-        
+        let i = doc.data(); let descHtml = i.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">${i.description}</div>` : "";
         let stockHtml = `<div style="font-size: 12px; color: #16a34a; font-weight:bold; margin-top: 5px;">📦 Stock: ${(i.stock !== undefined && i.stock !== null) ? i.stock : 'Unlimited'}</div>`;
-        if(i.stock !== undefined && i.stock !== null && i.stock <= 5) {
-            stockHtml = `<div style="font-size: 12px; color: #dc2626; font-weight:bold; margin-top: 5px;">⚠️ Low Stock: ${i.stock} left</div>`;
-        }
-
+        if(i.stock !== undefined && i.stock !== null && i.stock <= 5) stockHtml = `<div style="font-size: 12px; color: #dc2626; font-weight:bold; margin-top: 5px;">⚠️ Low Stock: ${i.stock} left</div>`;
         let limitHtml = (i.limit !== undefined && i.limit !== null) ? `<div style="font-size: 12px; color: #8b5cf6; font-weight:bold; margin-top: 5px;">🛑 Limit per user: ${i.limit}</div>` : '';
+        let stockStr = (i.stock !== undefined && i.stock !== null) ? i.stock : ''; let limitStr = (i.limit !== undefined && i.limit !== null) ? i.limit : '';
 
-        // Safely pass numbers/nulls to edit function
-        let stockStr = (i.stock !== undefined && i.stock !== null) ? i.stock : '';
-        let limitStr = (i.limit !== undefined && i.limit !== null) ? i.limit : '';
-
-        document.getElementById('itemsList').innerHTML += `
-        <div class="card">
-            <b>${i.name}</b> - ₹${i.price}
-            ${descHtml}
-            ${stockHtml}
-            ${limitHtml}
-            <img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;">
-            <br><br>
-            <button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}', '${stockStr}', '${limitStr}')">Edit</button>
-            <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
-        </div>`;
+        document.getElementById('itemsList').innerHTML += `<div class="card"><b>${i.name}</b> - ₹${i.price}${descHtml}${stockHtml}${limitHtml}<img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;"><br><br><button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}', '${stockStr}', '${limitStr}')">Edit</button><button class="delete" onclick="deleteItem('${doc.id}')">Delete</button></div>`;
     });
 });
 
-function editItem(id, n, p, img, desc, stock, limit) { 
-    editId = id; 
-    document.getElementById('nameInput').value = n; 
-    document.getElementById('priceInput').value = p; 
-    document.getElementById('imageInput').value = img; 
-    document.getElementById('descInput').value = desc; 
-    document.getElementById('stockInput').value = stock; 
-    document.getElementById('limitInput').value = limit; 
-    window.scrollTo(0, 0); 
-}
+function editItem(id, n, p, img, desc, stock, limit) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; document.getElementById('stockInput').value = stock; document.getElementById('limitInput').value = limit; window.scrollTo(0, 0); }
 function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); showToast("Item Deleted");} }
 
 /* ================================
@@ -830,7 +842,7 @@ async function savePaymentSettings() {
 }
 </script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOZcMYz-PKQ8nQUqCi1NjIe10uHjmZiGA&libraries=geometry,places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry,places"></script>
 
 </body>
 </html>
