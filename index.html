@@ -23,7 +23,7 @@ header { background: #111; color: white; padding: 15px; display: flex; gap: 10px
 
 .card { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
 
-input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
 button { padding: 10px 15px; border: none; border-radius: 6px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; }
 .edit { background: orange; }
@@ -35,6 +35,16 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 
 /* Call Button Styling */
 .btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; }
+
+/* --- IOS STYLE TOGGLE SWITCHES --- */
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.setting-row:last-child { border-bottom: none; }
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #a3a3a3; transition: .4s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: #16a34a; }
+input:checked + .slider:before { transform: translateX(26px); }
 </style>
 </head>
 
@@ -56,7 +66,7 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
     <div class="menu-item" onclick="showDashboard()">📊 Dashboard</div>
     <div class="menu-item" onclick="showDelivery()">🚚 Delivery Status</div>
     <div class="menu-item" onclick="showItems()">🍗 Menu Items</div>
-    <div class="menu-item" onclick="showSettings()">⚙️ Payment Settings</div>
+    <div class="menu-item" onclick="showSettings()">⚙️ Store & Settings</div>
     <div class="menu-item" onclick="logout()">🚪 Logout</div>
 </div>
 
@@ -74,9 +84,9 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
 
     <div id="itemsSection" style="display:none">
         <h3>Add / Edit Menu Item</h3>
-        <input id="nameInput" placeholder="Item Name">
-        <input id="priceInput" type="number" placeholder="Price">
-        <input id="imageInput" placeholder="Image URL">
+        <input type="text" id="nameInput" placeholder="Item Name">
+        <input type="number" id="priceInput" placeholder="Price">
+        <input type="text" id="imageInput" placeholder="Image URL">
         <button onclick="saveItem()" style="width: 100%;">Save Item</button>
 
         <hr style="margin: 20px 0; border: 1px solid #ddd;">
@@ -86,10 +96,45 @@ select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; }
     </div>
 
     <div id="settingsSection" style="display:none">
-        <h3>Payment & QR Settings</h3>
-        <div class="card">
+        
+        <h3>Master Power Controls</h3>
+        <div class="card" style="cursor: default;">
+            <div class="setting-row">
+                <div>
+                    <b style="font-size: 16px;">Store Status</b>
+                    <div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleStore" onchange="updateStoreToggles()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <b style="font-size: 16px;">Allow COD</b>
+                    <div style="font-size: 13px; color: #666;">Accept Cash on Delivery</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleCOD" onchange="updateStoreToggles()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <b style="font-size: 16px;">Allow Online Pay</b>
+                    <div style="font-size: 13px; color: #666;">Accept UPI Payments</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleOnline" onchange="updateStoreToggles()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 25px;">Payment & QR Settings</h3>
+        <div class="card" style="cursor: default;">
             <label style="font-weight: bold; color: #333;">1. Enter your UPI ID</label>
-            <input id="adminUpiInput" placeholder="e.g., yourname@bank">
+            <input type="text" id="adminUpiInput" placeholder="e.g., yourname@bank">
             
             <label style="font-weight: bold; color: #333;">2. Upload QR Code Image</label>
             <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
@@ -165,10 +210,9 @@ let alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_cl
 alarmAudio.loop = true;
 let isAudioUnlocked = false;
 let alarmInterval = null;
-
 let wakeLock = null;
+
 async function unlockAudio() {
-    // 1. Unlock Audio
     alarmAudio.play().then(() => {
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
@@ -178,7 +222,6 @@ async function unlockAudio() {
         alert("Could not enable audio. Please check your browser settings.");
     });
 
-    // 2. Wake Lock (Keep Screen Awake)
     if ('wakeLock' in navigator) {
         try {
             wakeLock = await navigator.wakeLock.request('screen');
@@ -187,9 +230,7 @@ async function unlockAudio() {
                     wakeLock = await navigator.wakeLock.request('screen');
                 }
             });
-        } catch (err) {
-            console.log("Wake Lock error:", err);
-        }
+        } catch (err) { console.log("Wake Lock error:", err); }
     }
 }
 
@@ -233,6 +274,34 @@ function showDashboard() { hideAllSections(); document.getElementById('dashboard
 function showDelivery() { hideAllSections(); document.getElementById('deliverySection').style.display="block"; closeMenu(); }
 function showItems() { hideAllSections(); document.getElementById('itemsSection').style.display="block"; closeMenu(); }
 function showSettings() { hideAllSections(); document.getElementById('settingsSection').style.display="block"; closeMenu(); }
+
+/* ================================
+   MASTER POWER TOGGLES LOGIC
+================================ */
+db.collection("settings").doc("store").onSnapshot(doc => {
+    if(doc.exists) {
+        let data = doc.data();
+        document.getElementById('toggleStore').checked = data.isStoreOpen !== false; // default true
+        document.getElementById('toggleCOD').checked = data.allowCOD !== false;      // default true
+        document.getElementById('toggleOnline').checked = data.allowOnline !== false;// default true
+    } else {
+        document.getElementById('toggleStore').checked = true;
+        document.getElementById('toggleCOD').checked = true;
+        document.getElementById('toggleOnline').checked = true;
+    }
+});
+
+function updateStoreToggles() {
+    let isStoreOpen = document.getElementById('toggleStore').checked;
+    let allowCOD = document.getElementById('toggleCOD').checked;
+    let allowOnline = document.getElementById('toggleOnline').checked;
+
+    db.collection("settings").doc("store").set({
+        isStoreOpen: isStoreOpen,
+        allowCOD: allowCOD,
+        allowOnline: allowOnline
+    }, { merge: true });
+}
 
 /* ================================
    PAYMENT SETTINGS LOGIC 
@@ -294,10 +363,8 @@ db.collection("orders")
     snapshot.forEach(doc => {
         let o = doc.data();
         
-        // Use clean sequential number if it exists, otherwise use old format
         let displayId = o.orderNumber ? o.orderNumber : doc.id.slice(0,6).toUpperCase();
         
-        // Generate Call Button if phone number exists
         let callButtonHTML = "";
         if (o.userPhone) {
             callButtonHTML = `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Customer</a>`;
