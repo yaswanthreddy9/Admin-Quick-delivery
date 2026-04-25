@@ -68,6 +68,11 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
 #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
 .toast { background: #111; color: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 14px; text-align: center; animation: toastFade 3s forwards; }
 @keyframes toastFade { 0% { opacity: 0; transform: translateY(-20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+
+/* PARTNER TRACKING MAP */
+#partnerMapModal { padding: 0; overflow: hidden; background: #eee; }
+#partnerMap { height: 100%; width: 100%; }
+.map-overlay-panel { position: absolute; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-radius: 20px 20px 0 0; box-shadow: 0 -3px 20px rgba(0,0,0,0.15); box-sizing: border-box; z-index: 10; text-align: center; }
 </style>
 </head>
 
@@ -126,6 +131,8 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
             <input type="text" id="nameInput" placeholder="Item Name *">
             <input type="number" id="priceInput" placeholder="Price *">
             <input type="text" id="imageInput" placeholder="Image URL *">
+            <input type="number" id="stockInput" placeholder="Current Stock Quantity (e.g. 50)">
+            
             <textarea id="descInput" rows="2" placeholder="Item Description (Optional)"></textarea>
             <button onclick="saveItem()" style="width: 100%;">Save Item</button>
         </div>
@@ -241,7 +248,18 @@ input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; borde
     </div>
 </div>
 
-<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);">
+<div id="driverMapModal" class="modal">
+    <div class="box" id="partnerMapModal">
+        <div id="partnerMap"></div>
+        <div class="map-overlay-panel">
+            <h3 id="trackingDriverName" style="margin: 0 0 5px 0; font-size: 18px;">Tracking Partner</h3>
+            <div id="trackingDriverStatus" style="color:#16a34a; font-size: 14px; font-weight:bold; margin-bottom: 15px;">Live GPS Signal Connected</div>
+            <button onclick="closeDriverMap()" style="width:100%; padding:12px; background:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Close Map</button>
+        </div>
+    </div>
+</div>
+
+<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
     <div class="box" style="background: transparent; box-shadow: none; text-align: center; width: 95%; max-width: 500px;" onclick="event.stopPropagation();">
         <h3 style="color: white; margin-top: 0;">Payment Screenshot</h3>
         <img id="previewScreenshot" src="" style="width: 100%; border-radius: 12px; border: 4px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 70vh; object-fit: contain; background: black;">
@@ -291,6 +309,9 @@ window.onclick = function(event) {
         event.target.style.display = "none";
         if(event.target.id === "screenshotModal") {
             document.getElementById('previewScreenshot').src = "";
+        }
+        if(event.target.id === "driverMapModal") {
+            closeDriverMap();
         }
     }
 };
@@ -468,8 +489,12 @@ async function uploadAudio(inputId, firestoreKey) {
 }
 
 /* ================================
-   DISPATCH: DRIVER MANAGEMENT 
+   DISPATCH: DRIVER MANAGEMENT & LIVE TRACKING
 ================================ */
+let trackingUnsubscribe = null;
+let adminMap = null;
+let adminPartnerMarker = null;
+
 db.collection("drivers").onSnapshot(snap => {
     onlineDriversList = [];
     let listHTML = "";
@@ -489,6 +514,12 @@ db.collection("drivers").onSnapshot(snap => {
         let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver";
         let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
 
+        // NEW: Track Button for Online Drivers
+        let trackBtnHTML = "";
+        if(isOnline && d.location && d.location.lat && !isSuspended) {
+            trackBtnHTML = `<button onclick="openDriverTracking('${doc.id}', '${d.name || 'Partner'}')" style="background:#2563eb; padding: 8px 12px; font-size: 13px; margin-right: 5px;">📍 Track Live</button>`;
+        }
+
         listHTML += `
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -497,6 +528,7 @@ db.collection("drivers").onSnapshot(snap => {
                 <div style="margin-top: 6px;">${badge}</div>
             </div>
             <div>
+                ${trackBtnHTML}
                 <button onclick="toggleDriverSuspension('${doc.id}', ${suspendAction})" style="background:${suspendBtnColor}; padding: 8px 12px; font-size: 13px;">${suspendBtnText}</button>
             </div>
         </div>`;
@@ -515,6 +547,47 @@ function toggleDriverSuspension(driverId, suspendState) {
     db.collection("drivers").doc(driverId).update({ isSuspended: suspendState })
     .then(() => showToast("Driver status updated!"))
     .catch(e => alert("Error: " + e.message));
+}
+
+// NEW: ADMIN LIVE RADAR
+function openDriverTracking(driverId, driverName) {
+    document.getElementById('trackingDriverName').innerText = `Tracking: ${driverName}`;
+    document.getElementById('driverMapModal').style.display = 'flex';
+    
+    if(typeof google === 'undefined') { alert("Google Maps failed to load."); return; }
+
+    if(trackingUnsubscribe) trackingUnsubscribe(); // Stop old listener
+
+    trackingUnsubscribe = db.collection("drivers").doc(driverId).onSnapshot(doc => {
+        if(!doc.exists) return;
+        let d = doc.data();
+        
+        if(!d.isOnline || d.isSuspended) {
+            document.getElementById('trackingDriverStatus').innerText = "Partner went offline.";
+            document.getElementById('trackingDriverStatus').style.color = "#dc2626";
+            return;
+        }
+
+        if(d.location && d.location.lat) {
+            document.getElementById('trackingDriverStatus').innerText = "Live GPS Signal Connected";
+            document.getElementById('trackingDriverStatus').style.color = "#16a34a";
+            let pos = { lat: d.location.lat, lng: d.location.lng };
+            
+            if(!adminMap) {
+                adminMap = new google.maps.Map(document.getElementById("partnerMap"), { center: pos, zoom: 16, disableDefaultUI: true });
+                adminPartnerMarker = new google.maps.Marker({ map: adminMap, icon: { url: "https://maps.google.com/mapfiles/kml/shapes/motorcycling.png", scaledSize: new google.maps.Size(35, 35) } });
+            }
+            adminPartnerMarker.setPosition(pos);
+            adminMap.panTo(pos);
+        } else {
+            document.getElementById('trackingDriverStatus').innerText = "Waiting for GPS signal...";
+        }
+    });
+}
+
+function closeDriverMap() {
+    document.getElementById('driverMapModal').style.display = 'none';
+    if(trackingUnsubscribe) { trackingUnsubscribe(); trackingUnsubscribe = null; }
 }
 
 /* ================================
@@ -618,7 +691,6 @@ function openOrder(id) {
 
         document.getElementById('statusSelect').value = o.status;
         
-        // Hide Manual Dispatch if Auto Assign is ON
         document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
 
         document.getElementById('orderModal').style.display = "flex";
@@ -670,21 +742,22 @@ function viewScreenshot(url) { document.getElementById('previewScreenshot').src 
 function closeScreenshotModal() { document.getElementById('screenshotModal').style.display = "none"; document.getElementById('previewScreenshot').src = ""; }
 
 /* ================================
-   ITEMS MANAGEMENT
+   ITEMS MANAGEMENT (STOCK ADDED)
 ================================ */
 function saveItem() {
     let name = document.getElementById('nameInput').value;
     let price = document.getElementById('priceInput').value;
     let image = document.getElementById('imageInput').value;
     let desc = document.getElementById('descInput').value;
+    let stock = parseInt(document.getElementById('stockInput').value) || 0; // NEW: Capture stock
 
     if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
-    let data = { name, price: Number(price), image, description: desc };
+    let data = { name, price: Number(price), image, description: desc, stock: stock };
 
     if(editId) { db.collection("items").doc(editId).update(data).then(()=>showToast("Item Updated")); editId = null; } 
     else { db.collection("items").add(data).then(()=>showToast("Item Added")); }
 
-    document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = "";
+    document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('stockInput').value = "";
 }
 
 db.collection("items").onSnapshot(snap => {
@@ -692,19 +765,26 @@ db.collection("items").onSnapshot(snap => {
     snap.forEach(doc => {
         let i = doc.data();
         let descHtml = i.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">${i.description}</div>` : "";
+        // Display stock logic in admin panel
+        let stockHtml = `<div style="font-size: 12px; color: #16a34a; font-weight:bold; margin-top: 5px;">📦 Stock: ${i.stock !== undefined ? i.stock : 'Unlimited'}</div>`;
+        if(i.stock !== undefined && i.stock <= 5) {
+            stockHtml = `<div style="font-size: 12px; color: #dc2626; font-weight:bold; margin-top: 5px;">⚠️ Low Stock: ${i.stock} left</div>`;
+        }
+
         document.getElementById('itemsList').innerHTML += `
         <div class="card">
             <b>${i.name}</b> - ₹${i.price}
             ${descHtml}
+            ${stockHtml}
             <img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;">
             <br><br>
-            <button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}')">Edit</button>
+            <button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}', ${i.stock || 0})">Edit</button>
             <button class="delete" onclick="deleteItem('${doc.id}')">Delete</button>
         </div>`;
     });
 });
 
-function editItem(id, n, p, img, desc) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; window.scrollTo(0, 0); }
+function editItem(id, n, p, img, desc, stock) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; document.getElementById('stockInput').value = stock; window.scrollTo(0, 0); }
 function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); showToast("Item Deleted");} }
 
 /* ================================
@@ -717,6 +797,8 @@ async function savePaymentSettings() {
     try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); showToast("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings: " + e.message); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry,places"></script>
 
 </body>
 </html>
