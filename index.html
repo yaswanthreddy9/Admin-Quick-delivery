@@ -1,75 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Admin Dashboard - Quick Delivery</title>
+<meta charset="UTF-8">
+<title>Master Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f5; -webkit-tap-highlight-color: transparent; }
-    
-    /* LOGIN SCREEN */
-    #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-    .login-box { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; }
-    input, textarea, select { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: Arial; }
-    .btn-primary { width: 100%; background: #111; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
-    .btn-google { width: 100%; background: white; color: #333; border: 1px solid #ccc; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-    .divider { margin: 20px 0; color: #888; font-size: 14px; display: flex; align-items: center; }
-    .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid #ddd; }
-    .divider:not(:empty)::before { margin-right: 10px; }
-    .divider:not(:empty)::after { margin-left: 10px; }
+body { margin: 0; font-family: Arial; background: #f5f5f5; }
 
-    /* DASHBOARD HEADER */
-    #dashboard { display: none; }
-    header { background: #111; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    
-    /* MOBILE-FIRST APP NAVIGATION (Bottom Bar) */
-    .nav-tabs { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; border-top: 1px solid #eee; }
-    .tab { flex: 1; text-align: center; padding: 12px 5px; color: #888; font-weight: bold; font-size: 12px; cursor: pointer; border-top: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.2s; }
-    .tab.active { color: #16a34a; border-top: 3px solid #16a34a; background: #f0fdf4; }
-    
-    .container { padding: 15px; padding-bottom: 80px; max-width: 800px; margin: auto; }
-    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; }
-    
-    /* PC DASHBOARD OVERRIDES */
-    @media (min-width: 768px) {
-        .nav-tabs { position: sticky; top: 58px; background: #222; box-shadow: none; border-top: none; flex-direction: row; }
-        .tab { font-size: 15px; padding: 15px; color: #aaa; border-top: none; border-bottom: 3px solid transparent; flex-direction: row; justify-content: center; }
-        .tab.active { color: white; border-bottom: 3px solid #16a34a; border-top: none; background: #111; }
-        .container { padding-bottom: 20px; margin-top: 20px; }
-    }
+/* LOGIN SCREEN */
+#loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+.login-box { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; }
+.login-box input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: Arial; }
+.login-box .btn-primary { width: 100%; background: #111; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+.login-box .btn-google { width: 100%; background: white; color: #333; border: 1px solid #ccc; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+.login-box .divider { margin: 20px 0; color: #888; font-size: 14px; display: flex; align-items: center; }
+.login-box .divider::before, .login-box .divider::after { content: ""; flex: 1; border-bottom: 1px solid #ddd; }
+.login-box .divider:not(:empty)::before { margin-right: 10px; }
+.login-box .divider:not(:empty)::after { margin-left: 10px; }
 
-    /* ORDERS UI */
-    .order-card { background: white; border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 15px; transition: 0.2s; }
-    .order-card.pending { border-color: #ef4444; background: #fef2f2; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); animation: pulseAlert 2s infinite; }
-    @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-    
-    .status-btn { padding: 12px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 5px; font-size: 14px; display: inline-block; }
-    .btn-accept { background: #16a34a; color: white; width: 100%; margin-bottom: 8px; }
-    .btn-dispatch { background: #2563eb; color: white; width: 100%; }
-    .btn-reject { background: white; color: #dc2626; border: 1px solid #dc2626; width: 100%; }
-    
-    @media (min-width: 768px) {
-        .btn-accept, .btn-dispatch, .btn-reject { width: auto; }
-    }
+/* HEADER & MENU */
+header { background: #111; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.3); height: 65px; box-sizing: border-box; }
 
-    /* TOAST */
-    #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-    .toast { background: #111; color: white; padding: 16px; border-radius: 12px; font-weight: bold; text-align: center; animation: toastFade 5s forwards; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    @keyframes toastFade { 0% { opacity: 0; transform: translateY(-20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+#unlockBanner { background: #ff9800; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1001; position: relative;}
 
-    /* TOGGLE SWITCH */
-    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: #16a34a; }
-    input:checked + .slider:before { transform: translateX(22px); }
+.menu { position: fixed; left: -260px; top: 0; width: 260px; height: 100%; background: white; transition: 0.3s; z-index: 10000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+.menu.open { left: 0; }
+.menu-header { background: #111; color: white; padding: 20px; }
+.menu-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #333;}
+.menu-item:hover { background: #f9f9f9; }
+#overlay { position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 9999; }
+
+/* HEADER TOGGLE SWITCH */
+.header-switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+.header-switch input { opacity: 0; width: 0; height: 0; }
+.header-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #dc2626; transition: .3s; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+.header-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .header-slider { background-color: #ffffff; }
+input:checked + .header-slider:before { transform: translateX(18px); background-color: #16a34a; }
+
+.container { padding: 15px; padding-bottom: 100px; }
+
+.card { background: white; padding: 18px; margin: 12px 0; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.08); position: relative; border: 1px solid #eaeaea;}
+.card-header { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px;}
+
+input[type="text"], input[type="number"], input[type="file"], textarea, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-family: Arial; font-size: 14px;}
+input[type="date"] { font-family: Arial; }
+
+button { padding: 12px 15px; border: none; border-radius: 8px; background: #16a34a; color: white; margin: 5px 0; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s;}
+button:hover { opacity: 0.9; }
+.edit { background: #f59e0b; }
+.delete { background: #dc2626; }
+
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10001; }
+.box { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto;}
+
+.btn-call { background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 10px; font-weight: bold; border: 1px solid #1d4ed8; text-align: center; }
+
+/* Settings Toggles */
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+.setting-row:last-child { border-bottom: none; }
+.switch { position: relative; display: inline-block; width: 54px; height: 30px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+.slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: #16a34a; }
+input:checked + .slider:before { transform: translateX(24px); }
+
+.color-picker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; border-radius: 5px; cursor: pointer; }
+
+/* Driver Badges */
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; }
+.badge-online { background: #16a34a; }
+.badge-offline { background: #666; }
+.badge-suspended { background: #dc2626; }
+
+/* TOAST NOTIFICATIONS */
+#toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+.toast { background: #111; color: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 14px; text-align: center; animation: toastFade 3s forwards; }
+@keyframes toastFade { 0% { opacity: 0; transform: translateY(-20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+
+/* PARTNER TRACKING MAP */
+#partnerMapModal { padding: 0; overflow: hidden; background: #eee; }
+#partnerMap { height: 100%; width: 100%; }
+.map-overlay-panel { position: absolute; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-radius: 20px 20px 0 0; box-shadow: 0 -3px 20px rgba(0,0,0,0.15); box-sizing: border-box; z-index: 10; text-align: center; }
+
+/* NEW ANALYTICS STAT CARDS */
+.stat-card { flex: 1; min-width: 80px; padding: 12px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.stat-title { font-size: 11px; font-weight: bold; opacity: 0.9; text-transform: uppercase; margin-bottom: 5px; white-space: nowrap;}
+.stat-value { font-size: 22px; font-weight: 900; }
 </style>
 </head>
+
 <body>
 
 <div id="toastContainer"></div>
 
-<div id="loginScreen">
+<div id="loginScreen" style="display: none;">
     <div class="login-box">
         <h2 style="margin-top:0; color:#111;">Admin Gateway</h2>
         <p style="color:#666; font-size: 14px; margin-bottom: 20px;">Restricted access. Authorized personnel only.</p>
@@ -91,55 +119,137 @@
 
         <div class="divider">OR</div>
 
-        <button class="btn-google" onclick="loginWithGoogle()">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> Sign in with Google
-        </button>
-        
-        <input id="adminEmail" type="email" placeholder="Admin Email" style="margin-top: 10px;">
+        <input id="adminEmail" type="email" placeholder="Admin Email">
         <input id="adminPassword" type="password" placeholder="Password">
         <button class="btn-primary" style="background:#333;" onclick="loginWithEmail()">Login with Email</button>
+        
+        <button class="btn-google" onclick="loginWithGoogle()" style="margin-top: 5px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> Sign in with Google
+        </button>
     </div>
 </div>
 
-<div id="dashboard">
-    <header>
-        <div>
-            <b style="font-size: 20px;">Command Center</b>
+<div id="appContainer" style="display: none;">
+
+    <div id="unlockBanner" onclick="unlockPermissions()">
+        🔔 Click here to Enable Max Audio & Push Notifications
+    </div>
+
+    <header id="mainHeader">
+        <div id="headerLeft" style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 24px; cursor: pointer;" onclick="openMenu()">☰</span>
+            <b style="font-size: 18px;">Admin Dispatch</b>
         </div>
-        <button onclick="logoutAdmin()" style="background: transparent; color: white; border: 1px solid white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Logout</button>
+        
+        <div id="headerRight">
+            <div style="display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.15); padding: 5px 12px; border-radius: 20px;">
+                <span id="headerStoreStatusText" style="font-size: 14px; font-weight: bold; color: #16a34a;">Store Open</span>
+                <label class="header-switch">
+                    <input type="checkbox" id="headerStoreToggle" onchange="toggleStoreStatus()">
+                    <span class="header-slider"></span>
+                </label>
+            </div>
+        </div>
     </header>
-    
-    <div class="nav-tabs">
-        <div class="tab active" onclick="switchTab('ordersTab', this)">
-            <span style="font-size: 20px;">📦</span> 
-            <span>Orders <span id="pendingBadge" style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 2px; display:none;">New</span></span>
-        </div>
-        <div class="tab" onclick="switchTab('menuTab', this)">
-            <span style="font-size: 20px;">🍔</span> 
-            <span>Menu</span>
-        </div>
-        <div class="tab" onclick="switchTab('notifyTab', this)">
-            <span style="font-size: 20px;">📢</span> 
-            <span>Notify</span>
-        </div>
-        <div class="tab" onclick="switchTab('settingsTab', this)">
-            <span style="font-size: 20px;">⚙️</span> 
-            <span>Settings</span>
-        </div>
+
+    <div id="overlay" onclick="closeMenu()"></div>
+
+    <div id="menu" class="menu">
+        <div class="menu-header"><h3>Control Center</h3></div>
+        <div class="menu-item" onclick="showSection('dashboardSection')">⚡ Live Dashboard</div>
+        <div class="menu-item" onclick="showSection('ordersSection')">📜 Orders & Analytics</div>
+        <div class="menu-item" onclick="showSection('dispatchSection')">👨‍✈️ Delivery Partners</div>
+        <div class="menu-item" onclick="showSection('itemsSection')">📋 Menu Items</div>
+        <div class="menu-item" onclick="showSection('notifySection')">📢 Push Notifications</div>
+        <div class="menu-item" onclick="showSection('settingsSection')">⚙️ Store Settings</div>
+        <div class="menu-item" onclick="logout()">🚪 Logout</div>
     </div>
 
     <div class="container">
         
-        <div id="ordersTab" class="tab-content">
-            <h2 style="margin-top: 0;">Live Orders</h2>
-            <div id="ordersList">Loading orders...</div>
+        <div id="dashboardSection">
+            <h3 style="color:#333; margin-top:0;">Live Active Orders</h3>
+            <p style="font-size: 13px; color: #666; margin-top:-10px;">Showing only Pending, Preparing, and Out for Delivery.</p>
+            <div id="dashboardList"></div>
         </div>
 
-        <div id="notifyTab" class="tab-content" style="display: none;">
+        <div id="ordersSection" style="display:none">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                <h3 style="color:#333; margin:0;">Analytics Dashboard</h3>
+                <div style="display:flex; align-items:center; gap: 5px; background: #eefce9; padding: 6px 10px; border-radius: 8px; border: 1px solid #16a34a;">
+                    <span style="font-size:16px;">📅</span>
+                    <input type="date" id="historyDateFilter" style="border:none; background:transparent; font-weight:bold; color:#16a34a; outline:none; padding:0;" onchange="renderOrdersHistory()">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+                <div class="stat-card" style="background:#2563eb;">
+                    <div class="stat-title">All-Time</div>
+                    <div class="stat-value" id="statTotalAll">0</div>
+                </div>
+                <div class="stat-card" style="background:#16a34a;">
+                    <div class="stat-title">Selected Date</div>
+                    <div class="stat-value" id="statToday">0</div>
+                </div>
+                <div class="stat-card" style="background:#f59e0b;">
+                    <div class="stat-title">Remaining</div>
+                    <div class="stat-value" id="statRemaining">0</div>
+                </div>
+                <div class="stat-card" style="background:#dc2626;">
+                    <div class="stat-title">Rejected</div>
+                    <div class="stat-value" id="statRejected">0</div>
+                </div>
+            </div>
+
+            <button onclick="openSalesModal()" style="width:100%; margin-bottom:20px; background:#8b5cf6; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);">💰 View Total Sales for Selected Date</button>
+
+            <h4 style="border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top:25px;">⏳ Open Orders</h4>
+            <div id="historyOpenList"></div>
+
+            <h4 style="border-bottom: 2px solid #16a34a; padding-bottom: 5px; color:#16a34a; margin-top:25px;">✅ Delivered</h4>
+            <div id="historyDeliveredList"></div>
+
+            <h4 style="border-bottom: 2px solid #dc2626; padding-bottom: 5px; color:#dc2626; margin-top:25px;">❌ Rejected</h4>
+            <div id="historyRejectedList"></div>
+        </div>
+
+        <div id="dispatchSection" style="display:none">
+            <h3 style="color:#333; margin-top:0;">Delivery Partners Fleet</h3>
+            <p style="font-size: 14px; color: #666; margin-top:-10px;">Monitor and manage your registered drivers.</p>
+            <div id="partnersList"></div>
+        </div>
+
+        <div id="itemsSection" style="display:none">
+            <h3 style="color:#333; margin-top:0;">Add / Edit Menu Item</h3>
             <div class="card">
-                <h2 style="margin-top: 0; color: #2563eb;">Push Notification</h2>
-                <p style="color: #666; font-size: 14px;">Broadcast a message directly to users' phones.</p>
+                <input type="text" id="nameInput" placeholder="Item Name *">
+                <input type="number" id="priceInput" placeholder="Price *">
+                <input type="text" id="imageInput" placeholder="Image URL *">
                 
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; font-weight: bold; color: #666;">Total Stock Available</label>
+                        <input type="number" id="stockInput" placeholder="e.g. 50 (Unlimited)">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; font-weight: bold; color: #666;">Max Qty Per User</label>
+                        <input type="number" id="limitInput" placeholder="e.g. 2 (No limit)">
+                    </div>
+                </div>
+                
+                <textarea id="descInput" rows="2" placeholder="Item Description (Optional)"></textarea>
+                <button onclick="saveItem()" style="width: 100%;">Save Item</button>
+            </div>
+
+            <hr style="margin: 25px 0; border: 1px solid #ddd;">
+            <h3 style="color:#333;">Current Menu Items</h3>
+            <div id="itemsList"></div>
+        </div>
+
+        <div id="notifySection" style="display:none">
+            <h3 style="color:#333; margin-top:0;">Push Notifications</h3>
+            <p style="font-size: 14px; color: #666; margin-top:-10px;">Broadcast a message directly to phones.</p>
+            <div class="card">
                 <label style="font-weight: bold; margin-top: 10px; display: block;">Target Audience:</label>
                 <select id="notifyTarget">
                     <option value="all_users">All Customers</option>
@@ -149,80 +259,180 @@
 
                 <input id="notifySpecificPhone" type="tel" placeholder="Enter Phone (e.g. 9876543210)" style="display:none;">
 
-                <label style="font-weight: bold; display: block;">Notification Title:</label>
+                <label style="font-weight: bold; display: block; margin-top: 10px;">Notification Title:</label>
                 <input id="notifyTitle" type="text" placeholder="e.g. 🌧️ Rainy Day Special!" maxlength="50">
 
                 <label style="font-weight: bold; display: block;">Notification Message:</label>
                 <textarea id="notifyMessage" rows="3" placeholder="e.g. Get 20% off all orders today. Order now!"></textarea>
 
-                <button class="btn-primary" style="background: #2563eb; font-size: 18px; padding: 16px;" onclick="sendCustomNotification()">🚀 Send Notification</button>
+                <button style="width: 100%; background: #2563eb; font-size: 16px;" onclick="sendCustomNotification()">🚀 Send Notification</button>
                 <div style="font-size: 12px; color: #888; margin-top: 10px; text-align: center;">Note: Sending requires Firebase Cloud Messaging backend active.</div>
             </div>
         </div>
 
-        <div id="menuTab" class="tab-content" style="display: none;">
-            <div class="card">
-                <h2 style="margin-top:0;">Add / Edit Item</h2>
-                <input id="itemName" placeholder="Item Name">
-                <input id="itemPrice" type="number" placeholder="Price (₹)">
-                <input id="itemDesc" placeholder="Short Description">
-                <input id="itemStock" type="number" placeholder="Stock Available (e.g., 50)">
-                <input id="itemImage" placeholder="Image URL (or leave blank)">
-                <input id="editItemId" type="hidden">
-                <button class="btn-primary" onclick="saveItem()" id="saveItemBtn">Save Item</button>
-                <button onclick="clearForm()" style="width: 100%; background: #eee; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #333;">Clear</button>
-            </div>
-            <h2 style="margin-top: 30px;">Current Menu</h2>
-            <div id="adminItemsList"></div>
-        </div>
-
-        <div id="settingsTab" class="tab-content" style="display: none;">
-            <div class="card">
-                <h2 style="margin-top:0; color:#dc2626;">Master Controls</h2>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-                    <b style="font-size: 16px;">Store is Open</b>
-                    <label class="switch">
-                        <input type="checkbox" id="storeOpenToggle" onchange="updateStoreSetting('isStoreOpen', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-                    <b style="font-size: 16px;">Accept COD</b>
-                    <label class="switch">
-                        <input type="checkbox" id="codToggle" onchange="updateStoreSetting('allowCOD', this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <div style="padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
-                    <b style="font-size: 16px; display: block; margin-bottom: 10px;">Announcement Banner</b>
-                    <input id="announcementInput" placeholder="e.g. Use code WELCOME for 10% off!">
-                    <button class="btn-primary" onclick="saveAnnouncement()">Update Banner</button>
-                </div>
-            </div>
+        <div id="settingsSection" style="display:none">
             
-            <div class="card">
-                <h2 style="margin-top:0; color:#2563eb;">Payment Info</h2>
-                <input id="vendorUpiId" placeholder="Your UPI ID (e.g. phone@upi)">
-                <input id="vendorQrUrl" placeholder="QR Code Image URL">
-                <button class="btn-primary" style="background:#2563eb;" onclick="savePaymentSettings()">Save Payment Info</button>
+            <h3 style="color:#333; margin-top:0;">Master Power Controls</h3>
+            <div class="card" style="cursor: default;">
+                <div class="setting-row">
+                    <div><b style="font-size: 16px;">Store Status</b><div style="font-size: 13px; color: #666;">Turn the app Online or Offline</div></div>
+                    <label class="switch"><input type="checkbox" id="toggleStore" onchange="updateStoreSettings()"><span class="slider"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div><b style="font-size: 16px;">Auto-Assign Drivers</b><div style="font-size: 13px; color: #666;">Assigns driver automatically when marked "Out for Delivery"</div></div>
+                    <label class="switch"><input type="checkbox" id="toggleAutoAssign" onchange="updateStoreSettings()"><span class="slider"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div><b style="font-size: 16px;">Allow COD</b><div style="font-size: 13px; color: #666;">Accept Cash on Delivery</div></div>
+                    <label class="switch"><input type="checkbox" id="toggleCOD" onchange="updateStoreSettings()"><span class="slider"></span></label>
+                </div>
+                <div class="setting-row">
+                    <div><b style="font-size: 16px;">Allow Online Pay</b><div style="font-size: 13px; color: #666;">Accept UPI Payments</div></div>
+                    <label class="switch"><input type="checkbox" id="toggleOnline" onchange="updateStoreSettings()"><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <h3 style="color:#333; margin-top: 25px;">Promotional Flash Popup</h3>
+            <div class="card" style="cursor: default;">
+                <div class="setting-row" style="border-bottom: none; padding-top: 0;">
+                    <div><b style="font-size: 16px;">Enable Promo Popup</b><div style="font-size: 13px; color: #666;">Shows on customer app launch</div></div>
+                    <label class="switch"><input type="checkbox" id="togglePromo" onchange="updateStoreSettings()"><span class="slider"></span></label>
+                </div>
+                <label style="font-weight: bold; color: #333; font-size: 14px; margin-top: 10px; display:block;">Upload Promo Image (Poster)</label>
+                <input type="file" id="promoImageInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
+                <button id="savePromoBtn" onclick="uploadPromoImage()" style="width: 100%; background: #8b5cf6; margin-bottom: 10px;">✨ Upload & Set Promo</button>
+                <img id="promoPreview" style="width: 100%; border-radius: 8px; display: none; margin-top: 10px;">
+            </div>
+
+            <h3 style="color:#333; margin-top: 25px;">Live Announcement Banner</h3>
+            <div class="card" style="cursor: default;">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">Announcement Text</label>
+                <input type="text" id="announceText" placeholder="e.g. USE CODE FLAT50 FOR OFFERS!">
+                
+                <div class="color-picker-row">
+                    <input type="color" id="announceBgColor" value="#fef08a">
+                    <label style="font-size: 14px; color: #444;">Background Color</label>
+                </div>
+                <div class="color-picker-row">
+                    <input type="color" id="announceTextColor" value="#854d0e">
+                    <label style="font-size: 14px; color: #444;">Text Color</label>
+                </div>
+                <button onclick="updateStoreSettings()" style="width: 100%; margin-top: 10px;">🚀 Update Banner</button>
+            </div>
+
+            <h3 style="color:#333; margin-top: 25px;">Audio Settings</h3>
+            <div class="card" style="cursor: default;">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">Admin Alert Volume</label>
+                <input type="range" id="adminVolume" min="0" max="1" step="0.1" value="1" style="width: 100%; margin: 10px 0;" onchange="updateVolume()">
+                
+                <label style="font-weight: bold; color: #333; font-size: 14px; margin-top: 10px; display: block;">Admin Alarm Sound (.mp3)</label>
+                <input type="file" id="adminAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
+                <button id="saveAdminAudioBtn" onclick="uploadAudio('adminAudioInput', 'adminAlertSoundUrl')" style="width: 100%; background: #2563eb; margin-bottom: 15px;">💾 Save Admin Alarm</button>
+
+                <hr style="border: 1px solid #eee; margin: 15px 0;">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">Customer App Sound (.mp3)</label>
+                <input type="file" id="customerAudioInput" accept="audio/*" style="background: #f9f9f9; padding: 10px;">
+                <button id="saveCustAudioBtn" onclick="uploadAudio('customerAudioInput', 'notificationSoundUrl')" style="width: 100%; background: #f59e0b;">💾 Save Customer App Sound</button>
+            </div>
+
+            <h3 style="color:#333; margin-top: 25px;">Payment Settings</h3>
+            <div class="card" style="cursor: default;">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">UPI ID</label>
+                <input type="text" id="adminUpiInput" placeholder="e.g., yourname@bank">
+                <label style="font-weight: bold; color: #333; font-size: 14px;">Upload QR Code Image</label>
+                <input type="file" id="adminQrInput" accept="image/*" style="background: #f9f9f9; padding: 10px;">
+                <button id="saveSettingsBtn" onclick="savePaymentSettings()" style="width: 100%; margin-top: 15px;">💾 Save Payment Settings</button>
             </div>
         </div>
 
+    </div>
+
+</div>
+
+<div id="orderModal" class="modal">
+    <div class="box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin: 0; color: #111;">Order Details</h3>
+            <span id="modalOrderIdText" style="background: #111; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;"></span>
+        </div>
+        
+        <div id="orderDetails" style="line-height: 1.6; margin-bottom: 15px; margin-top: 15px;"></div>
+
+        <div id="manualDispatchArea" style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #16a34a; margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 13px; color: #16a34a; display:block; margin-bottom: 5px;">Assign Delivery Partner:</label>
+            <select id="driverSelect" style="margin: 0; border: 1px solid #16a34a;">
+                <option value="">-- No Driver Assigned --</option>
+            </select>
+        </div>
+
+        <select id="statusSelect" style="font-weight: bold;">
+            <option value="pending">pending</option>
+            <option value="preparing">preparing</option>
+            <option value="out for delivery">out for delivery</option>
+            <option value="delivered">delivered</option>
+            <option value="rejected" style="color: red;">rejected</option>
+        </select>
+
+        <button style="width: 100%; padding: 14px; font-size: 16px;" onclick="updateStatus()">Save & Update Order</button>
+        <button style="width: 100%; background: #eee; color: #333;" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<div id="salesModal" class="modal">
+    <div class="box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Sales Report</h2>
+            <b style="font-size: 24px; cursor: pointer; color: #888;" onclick="closeSalesModal()">✕</b>
+        </div>
+        <p id="salesDateText" style="color:#666; font-weight:bold; margin-top:-5px; font-size: 14px;"></p>
+        
+        <div style="background:#f9f9f9; padding:20px; border-radius:12px; margin-bottom:15px; border: 1px solid #eee;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <span style="font-size:16px;">Cash on Delivery (COD)</span>
+                <b id="salesCodText" style="color:#dc2626; font-size:16px;">₹0</b>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <span style="font-size:16px;">Online Paid (UPI)</span>
+                <b id="salesOnlineText" style="color:#2563eb; font-size:16px;">₹0</b>
+            </div>
+            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:20px;">
+                <b>Total Revenue</b>
+                <b id="salesTotalText" style="color:#16a34a;">₹0</b>
+            </div>
+        </div>
+        <button style="width:100%; background:#eee; color:#333;" onclick="closeSalesModal()">Close Report</button>
+    </div>
+</div>
+
+<div id="driverMapModal" class="modal">
+    <div class="box" id="partnerMapModal">
+        <div id="partnerMap"></div>
+        <div class="map-overlay-panel">
+            <h3 id="trackingDriverName" style="margin: 0 0 5px 0; font-size: 18px;">Tracking Partner</h3>
+            <div id="trackingDriverStatus" style="color:#16a34a; font-size: 14px; font-weight:bold; margin-bottom: 15px;">Live GPS Signal Connected</div>
+            <button onclick="closeDriverMap()" style="width:100%; padding:12px; background:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Close Map</button>
+        </div>
+    </div>
+</div>
+
+<div id="screenshotModal" class="modal" style="z-index: 10005; background: rgba(0,0,0,0.85);" onclick="closeScreenshotModal()">
+    <div class="box" style="background: transparent; box-shadow: none; text-align: center; width: 95%; max-width: 500px;" onclick="event.stopPropagation();">
+        <h3 style="color: white; margin-top: 0;">Payment Screenshot</h3>
+        <img id="previewScreenshot" src="" style="width: 100%; border-radius: 12px; border: 4px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-height: 70vh; object-fit: contain; background: black;">
+        <button onclick="closeScreenshotModal()" style="background: #dc2626; margin-top: 15px; width: 100%;">❌ Close Preview</button>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
-// ==========================================
-// CONFIGURATION (product-app01)
-// ==========================================
-const firebaseConfig = {
+// UPDATED CONFIGURATION (product-app01)
+const config = {
   apiKey: "AIzaSyBSfrLwVh9m8RIcTJDURvEnX1VOeeiSJ_A",
   authDomain: "product-app01.firebaseapp.com",
   projectId: "product-app01",
@@ -231,34 +441,85 @@ const firebaseConfig = {
   appId: "1:740761845598:web:96dad31d8e5ccd339dd9cf"
 };
 
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(config);
 const db = firebase.firestore();
 const auth = firebase.auth();
-auth.useDeviceLanguage();
+const storage = firebase.storage();
+const messaging = firebase.messaging(); 
 
-// ==========================================
-// SECURITY & ALARM GLOBALS
-// ==========================================
-// ONLY this phone number can log in
-const ALLOWED_ADMIN_PHONE = "+919642530876"; 
-const ALLOWED_ADMIN_EMAIL = "m.yaswanthreddy@gmail.com"; 
+const ADMIN_EMAIL = "myeswanthreddy321@gmail.com";
+const ADMIN_PHONE = "+919642530876";
 
-// Create the loud, persistent alarm audio
-let sirenAudio = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
-sirenAudio.loop = true; // Loops infinitely until stopped
-let vibrationInterval = null;
+let selectedOrderId = null;
+let currentOrderDriverId = null; 
+let editId = null;
+let onlineDriversList = []; 
+let isAutoAssignEnabled = false;
 
-function showToast(message) {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div'); 
-    toast.className = "toast"; toast.innerText = message;
-    container.appendChild(toast); 
-    setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 5000);
+let globalOrders = []; // Stores all fetched orders for Analytics
+
+function getLocalDateStr(dateObj) {
+    const offset = dateObj.getTimezoneOffset() * 60000;
+    return new Date(dateObj.getTime() - offset).toISOString().split('T')[0];
 }
 
-// ==========================================
-// AUTHENTICATION LOGIC
-// ==========================================
+document.getElementById('historyDateFilter').value = getLocalDateStr(new Date());
+
+function showToast(message) {
+    let container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = "toast";
+    toast.innerText = message;
+    container.appendChild(toast);
+    setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
+// GLOBAL MODAL CLOSE
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+        if(event.target.id === "screenshotModal") document.getElementById('previewScreenshot').src = "";
+        if(event.target.id === "driverMapModal") closeDriverMap();
+    }
+};
+
+/* ================================
+   AUDIO & SYSTEM NOTIFICATIONS
+================================ */
+let alarmAudio = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+alarmAudio.loop = true;
+alarmAudio.volume = 1.0; 
+let isAudioUnlocked = false;
+let alarmInterval = null;
+
+async function unlockPermissions() {
+    alarmAudio.play().then(() => {
+        alarmAudio.pause(); alarmAudio.currentTime = 0;
+        isAudioUnlocked = true;
+        document.getElementById('unlockBanner').style.display = 'none';
+        showToast("Audio & Notifications Enabled! 🔔");
+    }).catch(err => { console.log(err); });
+
+    if ("Notification" in window) { Notification.requestPermission(); }
+}
+
+function updateVolume() { alarmAudio.volume = document.getElementById('adminVolume').value; }
+
+function playAlert(orderText) {
+    if (isAudioUnlocked && !alarmInterval) {
+        alarmAudio.play().catch(()=>{});
+        if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
+        alarmInterval = setInterval(() => { alarmAudio.play().catch(()=>{}); }, 3000);
+    }
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🚨 New Order Arrived!", { body: orderText, icon: "https://cdn-icons-png.flaticon.com/512/3500/3500833.png" });
+    }
+}
+function stopAlert() { alarmAudio.pause(); alarmAudio.currentTime = 0; if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
+
+/* ================================
+   AUTH & LOGIN SYSTEM
+================================ */
 let recaptchaVerifier = null;
 let confirmationResult = null;
 
@@ -279,9 +540,7 @@ function sendAdminOTP() {
     if(num.length !== 10) { showToast("⚠️ Enter 10-digit number"); return; }
     
     let formatted = "+91" + num;
-    
-    // FIRST SECURITY CHECK: Whitelist Validation
-    if(formatted !== ALLOWED_ADMIN_PHONE) {
+    if(formatted !== ADMIN_PHONE) {
         showToast("⛔ Unauthorized Admin Number.");
         return;
     }
@@ -305,10 +564,7 @@ function sendAdminOTP() {
 function verifyAdminOTP() {
     let code = document.getElementById('otpCode').value.trim();
     if(code.length !== 6) return;
-    
-    confirmationResult.confirm(code).catch(err => {
-        showToast("❌ Invalid OTP");
-    });
+    confirmationResult.confirm(code).catch(err => { showToast("❌ Invalid OTP"); });
 }
 
 function loginWithEmail() {
@@ -318,151 +574,50 @@ function loginWithEmail() {
     auth.signInWithEmailAndPassword(e, p).catch(err => showToast("❌ " + err.message));
 }
 
-function loginWithGoogle() {
-    let provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => showToast("❌ " + err.message));
+function loginWithGoogle() { 
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => showToast("❌ " + err.message)); 
 }
 
-function logoutAdmin() {
-    auth.signOut();
-}
+function logout() { auth.signOut(); }
 
-// SECURITY GATEWAY LISTENER
 auth.onAuthStateChanged(user => {
-    if (user) {
-        // Verify identity securely
-        if (user.phoneNumber === ALLOWED_ADMIN_PHONE || user.email === ALLOWED_ADMIN_EMAIL) {
-            document.getElementById('loginScreen').style.display = "none";
-            document.getElementById('dashboard').style.display = "block";
-            showToast("✅ Welcome Commander");
-            startAdminSystems();
-        } else {
-            auth.signOut();
-            showToast("⛔ Access Denied. You are not authorized.");
-        }
-    } else {
+    if(!user) { 
         document.getElementById('loginScreen').style.display = "flex";
-        document.getElementById('dashboard').style.display = "none";
-        stopAlarm(); // Ensure alarm stops if logged out
+        document.getElementById('appContainer').style.display = "none";
+        stopAlert();
+        return; 
+    }
+    
+    // Check Authorization
+    if(user.email === ADMIN_EMAIL || user.phoneNumber === ADMIN_PHONE) {
+        document.getElementById('loginScreen').style.display = "none";
+        document.getElementById('appContainer').style.display = "block";
+        showToast("✅ Admin Access Granted");
+    } else { 
+        alert("Not authorized."); 
+        auth.signOut(); 
     }
 });
 
+/* ================================
+   NAVIGATION
+================================ */
+function openMenu() { document.getElementById('menu').classList.add("open"); document.getElementById('overlay').style.display = "block"; }
+function closeMenu() { document.getElementById('menu').classList.remove("open"); document.getElementById('overlay').style.display = "none"; }
 
-// ==========================================
-// ADMIN SYSTEMS & ALARMS
-// ==========================================
-let isFirstLoad = true;
-
-function startAdminSystems() {
-    listenToOrdersAndAlarms();
-    loadMenu();
-    loadSettings();
+function showSection(sectionId) {
+    const sections = ['dashboardSection', 'ordersSection', 'dispatchSection', 'itemsSection', 'settingsSection', 'notifySection'];
+    sections.forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    closeMenu();
 }
 
-function triggerAlarm() {
-    sirenAudio.play().catch(e => console.log("Alarm blocked by browser"));
-    
-    if(navigator.vibrate && !vibrationInterval) {
-        vibrationInterval = setInterval(() => {
-            navigator.vibrate([1000, 500, 1000, 500]); // Vibrate pattern
-        }, 3000);
-    }
-}
-
-function stopAlarm() {
-    sirenAudio.pause();
-    sirenAudio.currentTime = 0;
-    if(vibrationInterval) {
-        clearInterval(vibrationInterval);
-        vibrationInterval = null;
-    }
-    if(navigator.vibrate) navigator.vibrate(0); 
-}
-
-function listenToOrdersAndAlarms() {
-    db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snap => {
-        let ordersHTML = "";
-        let hasNewPendingOrders = false;
-        
-        snap.forEach(doc => {
-            let o = doc.data(); 
-            let id = doc.id;
-            let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
-            
-            if(o.status === "pending") {
-                hasNewPendingOrders = true;
-            }
-
-            let d = o.createdAt ? o.createdAt.toDate().toLocaleString() : "Just now";
-            let itemsHTML = o.items.map(i => `<b>${i.qty}x</b> ${i.name}`).join("<br>");
-            let locLink = o.deliveryLocation ? `<a href="http://googleusercontent.com/maps.google.com/?q=${o.deliveryLocation.lat},${o.deliveryLocation.lng}" target="_blank" style="color:#2563eb; font-weight:bold; display:inline-block; margin-top:5px;">📍 Open in GPS Map</a><br>` : "";
-            let ssLink = o.paymentScreenshot ? `<a href="${o.paymentScreenshot}" target="_blank" style="color:#16a34a; font-weight:bold; display:inline-block; margin-top:5px;">📸 View Payment Screenshot</a>` : "";
-
-            let buttons = "";
-            let cardClass = "order-card";
-            
-            if (o.status === "pending") {
-                cardClass += " pending";
-                buttons = `<button class="status-btn btn-accept" onclick="updateStatus('${id}', 'preparing')">👨‍🍳 Accept & Prepare</button>
-                           <button class="status-btn btn-reject" onclick="updateStatus('${id}', 'rejected')">❌ Reject</button>`;
-            } else if (o.status === "preparing") {
-                buttons = `<button class="status-btn btn-dispatch" onclick="updateStatus('${id}', 'out for delivery')">🚴 Dispatch to Driver</button>`;
-            } else if (o.status === "out for delivery") {
-                buttons = `<button class="status-btn btn-accept" onclick="updateStatus('${id}', 'delivered')">✅ Mark Delivered</button>`;
-            }
-
-            ordersHTML += `
-            <div class="${cardClass}">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <b style="font-size:18px;">Order #${displayId}</b>
-                    <span style="font-weight:bold; text-transform:uppercase; color:#666;">[${o.status}]</span>
-                </div>
-                <div style="font-size:14px; margin-bottom:10px; color: #444; line-height: 1.4;">
-                    <b>Name:</b> ${o.userName}<br>
-                    <b>Phone:</b> <a href="tel:${o.userPhone}" style="color:#2563eb; font-weight:bold;">${o.userPhone}</a><br>
-                    <b>Address:</b> ${o.address}<br>
-                    ${locLink}
-                    <b>Time:</b> ${d}<br>
-                    <b>Payment:</b> ${o.payment} <br>${ssLink}
-                </div>
-                <div style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #eee; font-size:14px;">
-                    ${itemsHTML}
-                </div>
-                <div style="font-size:20px; font-weight:bold; margin-bottom:15px; text-align:right;">Total: ₹${o.total}</div>
-                <div>${buttons}</div>
-            </div>`;
-        });
-
-        document.getElementById('ordersList').innerHTML = ordersHTML || "<p style='text-align:center; color:#888; margin-top:40px;'>No orders yet.</p>";
-
-        // ALARM LOGIC
-        if(hasNewPendingOrders) {
-            document.getElementById('pendingBadge').style.display = "inline-block";
-            if(!isFirstLoad) { triggerAlarm(); }
-        } else {
-            document.getElementById('pendingBadge').style.display = "none";
-            stopAlarm(); 
-        }
-        
-        isFirstLoad = false;
-    });
-}
-
-function updateStatus(id, newStatus) {
-    db.collection("orders").doc(id).update({ status: newStatus }).then(() => {
-        showToast("✅ Status updated to: " + newStatus);
-    });
-}
-
-// ==========================================
-// NOTIFICATIONS SENDER
-// ==========================================
+/* ================================
+   PUSH NOTIFICATION COMMAND CENTER
+================================ */
 document.getElementById('notifyTarget').addEventListener('change', function() {
-    if(this.value === 'specific') {
-        document.getElementById('notifySpecificPhone').style.display = 'block';
-    } else {
-        document.getElementById('notifySpecificPhone').style.display = 'none';
-    }
+    if(this.value === 'specific') { document.getElementById('notifySpecificPhone').style.display = 'block'; } 
+    else { document.getElementById('notifySpecificPhone').style.display = 'none'; }
 });
 
 function sendCustomNotification() {
@@ -484,123 +639,379 @@ function sendCustomNotification() {
         sender: "admin"
     }).then(() => {
         showToast("🚀 Notification Queued for Sending!");
-        document.getElementById('notifyTitle').value = "";
-        document.getElementById('notifyMessage').value = "";
+        document.getElementById('notifyTitle').value = ""; document.getElementById('notifyMessage').value = "";
     }).catch(err => {
         showToast("❌ Failed to queue notification.");
     });
 }
 
+/* ================================
+   STORE SETTINGS
+================================ */
+db.collection("settings").doc("store").onSnapshot(doc => {
+    if(doc.exists) {
+        let data = doc.data();
+        let isStoreOpen = data.isStoreOpen !== false;
+        document.getElementById('toggleStore').checked = isStoreOpen; 
+        document.getElementById('headerStoreToggle').checked = isStoreOpen;
+        
+        let headerText = document.getElementById('headerStoreStatusText');
+        if(isStoreOpen) { headerText.innerText = "Store Open"; headerText.style.color = "#16a34a"; } 
+        else { headerText.innerText = "Store Closed"; headerText.style.color = "#dc2626"; }
 
-// ==========================================
-// TABS & SETTINGS CONTROLS
-// ==========================================
-function switchTab(tabId, el) {
-    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(tabId).style.display = 'block';
-    el.classList.add('active');
-}
-
-function updateStoreSetting(key, val) {
-    db.collection("settings").doc("store").set({ [key]: val }, { merge: true }).then(() => showToast("✅ Settings Updated"));
-}
-
-function saveAnnouncement() {
-    let txt = document.getElementById('announcementInput').value.trim();
-    db.collection("settings").doc("store").set({ announcementText: txt }, { merge: true }).then(() => showToast("📢 Banner Updated"));
-}
-
-function savePaymentSettings() {
-    let upi = document.getElementById('vendorUpiId').value.trim();
-    let qr = document.getElementById('vendorQrUrl').value.trim();
-    db.collection("settings").doc("payment").set({ upiId: upi, qrUrl: qr }, { merge: true }).then(() => showToast("💳 Payment Info Saved"));
-}
-
-function loadSettings() {
-    db.collection("settings").doc("store").onSnapshot(doc => {
-        if(doc.exists) {
-            let data = doc.data();
-            document.getElementById('storeOpenToggle').checked = data.isStoreOpen !== false;
-            document.getElementById('codToggle').checked = data.allowCOD !== false;
-            document.getElementById('announcementInput').value = data.announcementText || "";
-        }
-    });
-    db.collection("settings").doc("payment").onSnapshot(doc => {
-        if(doc.exists) {
-            let data = doc.data();
-            document.getElementById('vendorUpiId').value = data.upiId || "";
-            document.getElementById('vendorQrUrl').value = data.qrUrl || "";
-        }
-    });
-}
-
-// ==========================================
-// MENU MANAGEMENT
-// ==========================================
-function saveItem() {
-    let name = document.getElementById('itemName').value;
-    let price = parseInt(document.getElementById('itemPrice').value);
-    let desc = document.getElementById('itemDesc').value;
-    let stock = parseInt(document.getElementById('itemStock').value);
-    let image = document.getElementById('itemImage').value || "https://via.placeholder.com/150";
-    let id = document.getElementById('editItemId').value;
-
-    if(!name || isNaN(price)) { showToast("⚠️ Name and Price are required."); return; }
-
-    let data = { name, price, description: desc, image, stock: isNaN(stock) ? null : stock };
-
-    let p = id ? db.collection("items").doc(id).update(data) : db.collection("items").add(data);
-    
-    p.then(() => { showToast("🍔 Item Saved!"); clearForm(); });
-}
-
-function clearForm() {
-    document.getElementById('itemName').value = ""; document.getElementById('itemPrice').value = "";
-    document.getElementById('itemDesc').value = ""; document.getElementById('itemStock').value = "";
-    document.getElementById('itemImage').value = ""; document.getElementById('editItemId').value = "";
-    document.getElementById('saveItemBtn').innerText = "Save Item";
-}
-
-function editItem(id, name, price, desc, stock, img) {
-    document.getElementById('itemName').value = name; document.getElementById('itemPrice').value = price;
-    document.getElementById('itemDesc').value = desc !== 'undefined' ? desc : ""; 
-    document.getElementById('itemStock').value = stock !== 'undefined' ? stock : "";
-    document.getElementById('itemImage').value = img; document.getElementById('editItemId').value = id;
-    document.getElementById('saveItemBtn').innerText = "Update Item"; switchTab('menuTab', document.querySelectorAll('.tab')[1]);
-}
-
-function deleteItem(id) {
-    if(confirm("Are you sure you want to delete this item?")) {
-        db.collection("items").doc(id).delete().then(() => showToast("🗑️ Item Deleted"));
+        document.getElementById('toggleCOD').checked = data.allowCOD !== false;      
+        document.getElementById('toggleOnline').checked = data.allowOnline !== false;
+        
+        isAutoAssignEnabled = data.autoAssign === true;
+        document.getElementById('toggleAutoAssign').checked = isAutoAssignEnabled;
+        document.getElementById('togglePromo').checked = data.isPromoActive === true;
+        if(data.promoImageUrl) { document.getElementById('promoPreview').src = data.promoImageUrl; document.getElementById('promoPreview').style.display = "block"; }
+        if(data.announcementText) document.getElementById('announceText').value = data.announcementText;
+        if(data.announcementBgColor) document.getElementById('announceBgColor').value = data.announcementBgColor;
+        if(data.announcementTextColor) document.getElementById('announceTextColor').value = data.announcementTextColor;
+        if(data.adminAlertSoundUrl) { alarmAudio.src = data.adminAlertSoundUrl; }
     }
+});
+
+function toggleStoreStatus() {
+    let isOpen = document.getElementById('headerStoreToggle').checked;
+    db.collection("settings").doc("store").set({ isStoreOpen: isOpen }, { merge: true }).then(() => { showToast(isOpen ? "✅ Store is now OPEN" : "🚫 Store is now CLOSED"); }).catch(e => alert("Permission Error: " + e.message));
 }
 
-function loadMenu() {
-    db.collection("items").onSnapshot(snap => {
-        let h = "";
-        snap.forEach(doc => {
-            let i = doc.data();
-            let safeDesc = i.description ? i.description.replace(/'/g, "\\'") : '';
-            h += `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;">
-                        <div>
-                            <b style="font-size:16px;">${i.name}</b><br>
-                            <span style="color:#16a34a; font-weight:bold;">₹${i.price}</span>
-                        </div>
-                        <div style="font-size:13px; color:#888; background:#f4f4f5; padding:4px 8px; border-radius:4px;">
-                            Stock: ${i.stock !== null && i.stock !== undefined ? i.stock : 'Unlimited'}
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button style="flex:1; background:#2563eb; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="editItem('${doc.id}', '${i.name.replace(/'/g, "\\'")}', ${i.price}, '${safeDesc}', '${i.stock}', '${i.image}')">Edit</button>
-                        <button style="flex:1; background:white; color:#dc2626; border:1px solid #dc2626; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="deleteItem('${doc.id}')">Delete</button>
-                    </div>
-                  </div>`;
-        });
-        document.getElementById('adminItemsList').innerHTML = h;
+function updateStoreSettings() {
+    db.collection("settings").doc("store").set({
+        isStoreOpen: document.getElementById('toggleStore').checked,
+        allowCOD: document.getElementById('toggleCOD').checked,
+        allowOnline: document.getElementById('toggleOnline').checked,
+        autoAssign: document.getElementById('toggleAutoAssign').checked,
+        isPromoActive: document.getElementById('togglePromo').checked,
+        announcementText: document.getElementById('announceText').value.trim(),
+        announcementBgColor: document.getElementById('announceBgColor').value,
+        announcementTextColor: document.getElementById('announceTextColor').value
+    }, { merge: true }).then(()=> showToast("✅ Settings Updated Live!")).catch(e => alert("Permission Error"));
+}
+
+async function uploadPromoImage() {
+    let fileInput = document.getElementById('promoImageInput'); let btn = document.getElementById('savePromoBtn');
+    if (fileInput.files.length === 0) { alert("Please select an image first."); return; }
+    btn.innerText = "Uploading Image..."; btn.disabled = true;
+    try {
+        const file = fileInput.files[0]; const ref = storage.ref().child(`promo_images/${Date.now()}_${file.name}`);
+        await ref.put(file); let url = await ref.getDownloadURL();
+        await db.collection("settings").doc("store").set({ promoImageUrl: url, isPromoActive: true }, {merge: true});
+        document.getElementById('togglePromo').checked = true; showToast("✨ Promo Image Live Updated!"); fileInput.value = ""; 
+    } catch (e) { alert("Error uploading image"); } finally { btn.innerText = "✨ Upload & Set Promo"; btn.disabled = false; }
+}
+
+async function uploadAudio(inputId, firestoreKey) {
+    let fileInput = document.getElementById(inputId); let btn = document.getElementById(inputId === 'adminAudioInput' ? 'saveAdminAudioBtn' : 'saveCustAudioBtn');
+    if (fileInput.files.length === 0) { alert("Select an audio file first."); return; }
+    btn.innerText = "Uploading Audio..."; btn.disabled = true;
+    try {
+        const file = fileInput.files[0]; const ref = storage.ref().child(`audio_settings/${Date.now()}_${file.name}`);
+        await ref.put(file); let url = await ref.getDownloadURL();
+        let updateData = {}; updateData[firestoreKey] = url;
+        await db.collection("settings").doc("store").set(updateData, {merge: true});
+        showToast("✅ Custom Audio Live Updated!"); fileInput.value = ""; 
+    } catch (e) { alert("Error uploading audio"); } finally { btn.innerText = "💾 Save Sound"; btn.disabled = false; }
+}
+
+/* ================================
+   DISPATCH: DRIVER MANAGEMENT & LIVE TRACKING
+================================ */
+let trackingUnsubscribe = null; let adminMap = null; let adminPartnerMarker = null;
+
+db.collection("drivers").onSnapshot(snap => {
+    onlineDriversList = []; let listHTML = ""; let selectHTML = '<option value="">-- No Driver Assigned --</option>';
+    snap.forEach(doc => {
+        let d = doc.data(); let isSuspended = d.isSuspended || false; let isOnline = d.isOnline || false;
+        let badge = isSuspended ? `<span class="badge badge-suspended">Suspended</span>` : (isOnline ? `<span class="badge badge-online">🟢 Online</span>` : `<span class="badge badge-offline">⚫ Offline</span>`);
+        let suspendAction = isSuspended ? false : true; let suspendBtnText = isSuspended ? "Unlock Account" : "Suspend Driver"; let suspendBtnColor = isSuspended ? "#16a34a" : "#dc2626";
+        let trackBtnHTML = (isOnline && d.location && d.location.lat && !isSuspended) ? `<button onclick="openDriverTracking('${doc.id}', '${d.name || 'Partner'}')" style="background:#2563eb; padding: 8px 12px; font-size: 13px; margin-right: 5px;">📍 Track Live</button>` : "";
+
+        listHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size: 16px;">${d.name || "Unknown"}</b><br><span style="font-size: 13px; color: #666;">📞 ${d.phone || "No Phone"}</span><br><div style="margin-top: 6px;">${badge}</div></div><div>${trackBtnHTML}<button onclick="toggleDriverSuspension('${doc.id}', ${suspendAction})" style="background:${suspendBtnColor}; padding: 8px 12px; font-size: 13px;">${suspendBtnText}</button></div></div>`;
+        if (isOnline && !isSuspended && d.phone) { onlineDriversList.push({ id: doc.id, name: d.name, phone: d.phone }); selectHTML += `<option value="${doc.id}|${d.phone}">${d.name} (${d.phone})</option>`; }
     });
+    document.getElementById('partnersList').innerHTML = listHTML; document.getElementById('driverSelect').innerHTML = selectHTML;
+});
+
+function toggleDriverSuspension(driverId, suspendState) { db.collection("drivers").doc(driverId).update({ isSuspended: suspendState }).then(() => showToast("Driver status updated!")).catch(e => alert("Error: " + e.message)); }
+
+function openDriverTracking(driverId, driverName) {
+    document.getElementById('trackingDriverName').innerText = `Tracking: ${driverName}`; document.getElementById('driverMapModal').style.display = 'flex';
+    if(typeof google === 'undefined') { alert("Google Maps failed to load."); return; }
+    if(trackingUnsubscribe) trackingUnsubscribe(); 
+    trackingUnsubscribe = db.collection("drivers").doc(driverId).onSnapshot(doc => {
+        if(!doc.exists) return; let d = doc.data();
+        if(!d.isOnline || d.isSuspended) { document.getElementById('trackingDriverStatus').innerText = "Partner went offline."; document.getElementById('trackingDriverStatus').style.color = "#dc2626"; return; }
+        if(d.location && d.location.lat) {
+            document.getElementById('trackingDriverStatus').innerText = "Live GPS Signal Connected"; document.getElementById('trackingDriverStatus').style.color = "#16a34a";
+            let pos = { lat: d.location.lat, lng: d.location.lng };
+            if(!adminMap) { adminMap = new google.maps.Map(document.getElementById("partnerMap"), { center: pos, zoom: 16, disableDefaultUI: true }); adminPartnerMarker = new google.maps.Marker({ map: adminMap, icon: { url: "https://maps.google.com/mapfiles/kml/shapes/motorcycling.png", scaledSize: new google.maps.Size(35, 35) } }); }
+            adminPartnerMarker.setPosition(pos); adminMap.panTo(pos);
+        } else { document.getElementById('trackingDriverStatus').innerText = "Waiting for GPS signal..."; }
+    });
+}
+function closeDriverMap() { document.getElementById('driverMapModal').style.display = 'none'; if(trackingUnsubscribe) { trackingUnsubscribe(); trackingUnsubscribe = null; } }
+
+/* ================================
+   LOAD ALL ORDERS (GLOBAL LISTENER)
+================================ */
+let initialLoadDone = false;
+
+db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    globalOrders = [];
+    
+    snapshot.docChanges().forEach(change => {
+        let o = change.doc.data();
+        let displayId = o.orderNumber ? o.orderNumber : change.doc.id.slice(0,6).toUpperCase();
+        
+        if(change.type === "added" && initialLoadDone) { 
+            playAlert(`Order #${displayId} from ${o.userName || "Customer"} - ₹${o.total}`); 
+        }
+
+        if (change.type === "added" && initialLoadDone && isAutoAssignEnabled && o.status === "pending" && !o.driverId) {
+            if (onlineDriversList.length > 0) {
+                let chosenDriver = onlineDriversList[0];
+                db.collection("orders").doc(change.doc.id).update({
+                    driverId: chosenDriver.id, driverPhone: chosenDriver.phone, driverName: chosenDriver.name
+                }).then(() => showToast(`Auto-assigned #${displayId} to ${chosenDriver.name}`));
+            }
+        }
+    });
+
+    snapshot.forEach(doc => {
+        globalOrders.push({ id: doc.id, ...doc.data() });
+    });
+    
+    initialLoadDone = true;
+    
+    renderLiveDashboard();
+    renderOrdersHistory();
+});
+
+
+/* ================================
+   RENDER LIVE DASHBOARD
+================================ */
+function generateOrderCardHTML(docId, o) {
+    let displayId = o.orderNumber ? o.orderNumber : docId.slice(0,6).toUpperCase();
+    let customerCall = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" onclick="event.stopPropagation()">📞 Call Cust.</a>` : "";
+    let driverInfo = o.driverId ? `<div style="background: #eefce9; padding: 6px; border-radius: 6px; font-size: 12px; color: #16a34a; font-weight: bold; margin-top: 8px; border: 1px solid #ccebc4;">🛵 Assigned: ${o.driverName || 'Partner'}</div>` : `<div style="background: #fee2e2; padding: 6px; border-radius: 6px; font-size: 12px; color: #dc2626; font-weight: bold; margin-top: 8px; border: 1px dashed #fca5a5;">⚠️ Unassigned</div>`;
+    let statusColor = o.status === 'rejected' ? 'red' : (o.status === 'delivered' ? '#16a34a' : '#f59e0b');
+
+    return `
+    <div class="card" onclick="openOrder('${docId}')" style="padding: 14px; margin: 10px 0; cursor:pointer;">
+        <div class="card-header" style="margin-bottom: 5px; padding-bottom: 5px;">
+            <b style="font-size: 15px;">#${displayId} - ${o.userName || "Customer"}</b>
+            <span style="color: ${statusColor}; font-weight:bold; text-transform:capitalize; font-size: 13px;">${o.status}</span>
+        </div>
+        <div style="font-size: 13px; color: #555;"><b>Pay:</b> ${o.payment} | <b>Total:</b> ₹${o.total}</div>
+        ${(o.status !== 'delivered' && o.status !== 'rejected') ? driverInfo : ''}
+    </div>`;
+}
+
+function renderLiveDashboard() {
+    const list = document.getElementById('dashboardList');
+    list.innerHTML = "";
+    
+    const activeOrders = globalOrders.filter(o => o.status !== "delivered" && o.status !== "rejected");
+    
+    if (activeOrders.length === 0) {
+        list.innerHTML = "<div style='text-align:center; padding:30px; color:#888;'>No active orders currently.<br>All caught up!</div>";
+        return;
+    }
+
+    activeOrders.forEach(o => {
+        list.innerHTML += generateOrderCardHTML(o.id, o);
+    });
+}
+
+/* ================================
+   RENDER ORDERS & ANALYTICS
+================================ */
+function renderOrdersHistory() {
+    let selectedDateStr = document.getElementById('historyDateFilter').value;
+    
+    let totalAllTimeDelivered = 0;
+    let selectedDayTotal = 0;
+    let selectedDayRemaining = 0;
+    let selectedDayRejected = 0;
+
+    let htmlOpen = "";
+    let htmlDelivered = "";
+    let htmlRejected = "";
+
+    globalOrders.forEach(o => {
+        if(o.status === "delivered") totalAllTimeDelivered++;
+        
+        let oDateStr = o.createdAt ? getLocalDateStr(o.createdAt.toDate()) : getLocalDateStr(new Date());
+        
+        if (oDateStr === selectedDateStr) {
+            if (o.status !== "rejected") selectedDayTotal++; 
+            if (o.status === "pending" || o.status === "preparing" || o.status === "out for delivery") selectedDayRemaining++;
+            if (o.status === "rejected") selectedDayRejected++;
+
+            let card = generateOrderCardHTML(o.id, o);
+            if (o.status === "delivered") htmlDelivered += card;
+            else if (o.status === "rejected") htmlRejected += card;
+            else htmlOpen += card;
+        }
+    });
+
+    document.getElementById('statTotalAll').innerText = totalAllTimeDelivered;
+    document.getElementById('statToday').innerText = selectedDayTotal;
+    document.getElementById('statRemaining').innerText = selectedDayRemaining;
+    document.getElementById('statRejected').innerText = selectedDayRejected;
+
+    document.getElementById('historyOpenList').innerHTML = htmlOpen || "<div style='color:#888; font-size:13px;'>No open orders for this date.</div>";
+    document.getElementById('historyDeliveredList').innerHTML = htmlDelivered || "<div style='color:#888; font-size:13px;'>No delivered orders for this date.</div>";
+    document.getElementById('historyRejectedList').innerHTML = htmlRejected || "<div style='color:#888; font-size:13px;'>No rejected orders for this date.</div>";
+}
+
+/* ================================
+   SALES REPORT MODAL
+================================ */
+function openSalesModal() {
+    let selectedDateStr = document.getElementById('historyDateFilter').value;
+    let codTotal = 0;
+    let onlineTotal = 0;
+    
+    globalOrders.forEach(o => {
+        let oDateStr = o.createdAt ? getLocalDateStr(o.createdAt.toDate()) : getLocalDateStr(new Date());
+        
+        if (oDateStr === selectedDateStr && o.status === "delivered") {
+            let amt = Number(o.total) || 0;
+            if (o.payment === "COD" || o.payment === "Cash on Delivery") { codTotal += amt; } else { onlineTotal += amt; }
+        }
+    });
+
+    document.getElementById('salesDateText').innerText = `Data for: ${selectedDateStr}`;
+    document.getElementById('salesCodText').innerText = `₹${codTotal}`;
+    document.getElementById('salesOnlineText').innerText = `₹${onlineTotal}`;
+    document.getElementById('salesTotalText').innerText = `₹${codTotal + onlineTotal}`;
+
+    document.getElementById('salesModal').style.display = 'flex';
+}
+
+function closeSalesModal() { document.getElementById('salesModal').style.display = 'none'; }
+
+
+/* ================================
+   ORDER MANAGEMENT
+================================ */
+function openOrder(id) {
+    stopAlert(); selectedOrderId = id;
+    db.collection("orders").doc(id).get().then(doc => {
+        let o = doc.data(); let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
+        document.getElementById('modalOrderIdText').innerText = `#${displayId}`;
+        currentOrderDriverId = o.driverId || null; 
+
+        let driverSelect = document.getElementById('driverSelect');
+        if (o.driverId && o.driverPhone) {
+            let val = `${o.driverId}|${o.driverPhone}`;
+            if (!Array.from(driverSelect.options).some(opt => opt.value === val)) { driverSelect.innerHTML += `<option value="${val}">${o.driverName || 'Partner'} (${o.driverPhone}) - Offline</option>`; }
+            driverSelect.value = val;
+        } else { driverSelect.value = ""; }
+
+        let paymentHTML = `<b>Payment Method:</b> ${o.payment}`;
+        if (o.payment === "ONLINE" && o.paymentScreenshot) { paymentHTML += `<br><button onclick="viewScreenshot('${o.paymentScreenshot}')" style="background: #2563eb; width: 100%; margin-top: 10px;">📸 Verify Screenshot</button>`; }
+        
+        let callCust = o.userPhone ? `<a href="tel:${o.userPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; margin-bottom: 5px;">📞 Call Customer: ${o.userPhone}</a>` : "";
+        let callDriver = o.driverPhone ? `<a href="tel:${o.driverPhone}" class="btn-call" style="width: 100%; box-sizing: border-box; background: #16a34a; border-color: #15803d; margin-bottom: 10px;">🛵 Call Driver: ${o.driverPhone}</a>` : "";
+
+        document.getElementById('orderDetails').innerHTML = `
+            ${callCust} ${callDriver}
+            <p style="margin-top:0;"><b>Customer:</b> ${o.userName || "Guest"}</p>
+            <p><b>Items:</b><br> ${o.items ? o.items.map(i=>`• ${i.qty}x ${i.name}`).join("<br>") : "No items"}</p>
+            <hr>
+            <p style="font-size: 18px; color: #16a34a; font-weight: bold;">Total: ₹${o.total}</p>
+            <p><b>Address:</b><br> ${o.address}</p>
+            <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 10px;">${paymentHTML}</div>
+        `;
+
+        document.getElementById('statusSelect').value = o.status;
+        document.getElementById('manualDispatchArea').style.display = isAutoAssignEnabled ? 'none' : 'block';
+        document.getElementById('orderModal').style.display = "flex";
+    });
+}
+
+function updateStatus() {
+    let status = document.getElementById('statusSelect').value;
+    let updatePayload = { status: status };
+
+    if (!isAutoAssignEnabled) {
+        let selectedDriver = document.getElementById('driverSelect').value;
+        if (selectedDriver) {
+            let parts = selectedDriver.split('|'); let selText = document.getElementById('driverSelect').options[document.getElementById('driverSelect').selectedIndex].text;
+            updatePayload.driverId = parts[0]; updatePayload.driverPhone = parts[1]; updatePayload.driverName = selText.split(' (')[0]; 
+        } else {
+            updatePayload.driverId = firebase.firestore.FieldValue.delete(); updatePayload.driverPhone = firebase.firestore.FieldValue.delete(); updatePayload.driverName = firebase.firestore.FieldValue.delete();
+        }
+    } 
+    else if (status === "out for delivery" && !currentOrderDriverId) {
+        if (onlineDriversList.length > 0) {
+            let chosenDriver = onlineDriversList[0];
+            updatePayload.driverId = chosenDriver.id; updatePayload.driverPhone = chosenDriver.phone; updatePayload.driverName = chosenDriver.name;
+            showToast(`Auto-assigned order to ${chosenDriver.name}!`);
+        } else { alert("Warning: Order marked 'Out for Delivery', but NO DRIVERS ARE ONLINE. It is currently unassigned."); }
+    }
+
+    db.collection("orders").doc(selectedOrderId).update(updatePayload).then(() => showToast("✅ Order Updated!")).catch(e => alert("Permission Error: " + e.message));
+    closeModal();
+}
+
+function closeModal() { document.getElementById('orderModal').style.display = "none"; }
+function viewScreenshot(url) { document.getElementById('previewScreenshot').src = url; document.getElementById('screenshotModal').style.display = "flex"; }
+function closeScreenshotModal() { document.getElementById('screenshotModal').style.display = "none"; document.getElementById('previewScreenshot').src = ""; }
+
+/* ================================
+   ITEMS MANAGEMENT
+================================ */
+function saveItem() {
+    let name = document.getElementById('nameInput').value; let price = document.getElementById('priceInput').value; let image = document.getElementById('imageInput').value; let desc = document.getElementById('descInput').value;
+    let stockVal = document.getElementById('stockInput').value; let limitVal = document.getElementById('limitInput').value;
+
+    if(!name || !price || !image) { alert("Fill name, price, and image url."); return; }
+    let data = { name, price: Number(price), image, description: desc };
+    
+    if(stockVal !== "") data.stock = parseInt(stockVal); else data.stock = null; 
+    if(limitVal !== "") data.limit = parseInt(limitVal); else data.limit = null;
+
+    if(editId) { db.collection("items").doc(editId).update(data).then(()=>showToast("Item Updated")); editId = null; } 
+    else { db.collection("items").add(data).then(()=>showToast("Item Added")); }
+
+    document.getElementById('nameInput').value = ""; document.getElementById('priceInput').value = ""; document.getElementById('imageInput').value = ""; document.getElementById('descInput').value = ""; document.getElementById('stockInput').value = ""; document.getElementById('limitInput').value = "";
+}
+
+db.collection("items").onSnapshot(snap => {
+    document.getElementById('itemsList').innerHTML = "";
+    snap.forEach(doc => {
+        let i = doc.data(); let descHtml = i.description ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">${i.description}</div>` : "";
+        let stockHtml = `<div style="font-size: 12px; color: #16a34a; font-weight:bold; margin-top: 5px;">📦 Stock: ${(i.stock !== undefined && i.stock !== null) ? i.stock : 'Unlimited'}</div>`;
+        if(i.stock !== undefined && i.stock !== null && i.stock <= 5) stockHtml = `<div style="font-size: 12px; color: #dc2626; font-weight:bold; margin-top: 5px;">⚠️ Low Stock: ${i.stock} left</div>`;
+        let limitHtml = (i.limit !== undefined && i.limit !== null) ? `<div style="font-size: 12px; color: #8b5cf6; font-weight:bold; margin-top: 5px;">🛑 Limit per user: ${i.limit}</div>` : '';
+        let stockStr = (i.stock !== undefined && i.stock !== null) ? i.stock : ''; let limitStr = (i.limit !== undefined && i.limit !== null) ? i.limit : '';
+
+        document.getElementById('itemsList').innerHTML += `<div class="card"><b>${i.name}</b> - ₹${i.price}${descHtml}${stockHtml}${limitHtml}<img src="${i.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-top: 10px;"><br><br><button class="edit" onclick="editItem('${doc.id}','${i.name.replace(/'/g, "\\'")}',${i.price},'${i.image}','${(i.description || '').replace(/'/g, "\\'")}', '${stockStr}', '${limitStr}')">Edit</button><button class="delete" onclick="deleteItem('${doc.id}')">Delete</button></div>`;
+    });
+});
+
+function editItem(id, n, p, img, desc, stock, limit) { editId = id; document.getElementById('nameInput').value = n; document.getElementById('priceInput').value = p; document.getElementById('imageInput').value = img; document.getElementById('descInput').value = desc; document.getElementById('stockInput').value = stock; document.getElementById('limitInput').value = limit; window.scrollTo(0, 0); }
+function deleteItem(id) { if(confirm("Are you sure you want to delete this item?")) { db.collection("items").doc(id).delete(); showToast("Item Deleted");} }
+
+/* ================================
+   PAYMENT SETTINGS
+================================ */
+db.collection("settings").doc("payment").onSnapshot(doc => { if(doc.exists && doc.data().upiId) document.getElementById('adminUpiInput').value = doc.data().upiId; });
+async function savePaymentSettings() {
+    let upiId = document.getElementById('adminUpiInput').value.trim(); let fileInput = document.getElementById('adminQrInput'); let btn = document.getElementById('saveSettingsBtn');
+    if(!upiId) { alert("Please enter your UPI ID"); return; } btn.innerText = "Saving..."; btn.disabled = true;
+    try { let updateData = { upiId: upiId }; if (fileInput.files.length > 0) { const file = fileInput.files[0]; const qrRef = storage.ref().child(`admin_settings/qr_code_${Date.now()}_${file.name}`); await qrRef.put(file); updateData.qrUrl = await qrRef.getDownloadURL(); } await db.collection("settings").doc("payment").set(updateData, {merge: true}); showToast("✅ Payment Settings Live Updated!"); fileInput.value = ""; } catch (e) { alert("Error saving settings: " + e.message); } finally { btn.innerText = "💾 Save Payment Settings"; btn.disabled = false; }
 }
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOZcMYz-PKQ8nQUqCi1NjIe10uHjmZiGA&libraries=geometry,places"></script>
+
 </body>
 </html>
