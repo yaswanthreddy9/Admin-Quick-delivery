@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Admin Dashboard - Quick Delivery</title>
 <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f5; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f5; -webkit-tap-highlight-color: transparent; }
     
     /* LOGIN SCREEN */
     #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
     .login-box { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee; }
-    input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+    input, textarea, select { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: Arial; }
     .btn-primary { width: 100%; background: #111; color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
     .btn-google { width: 100%; background: white; color: #333; border: 1px solid #ccc; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .divider { margin: 20px 0; color: #888; font-size: 14px; display: flex; align-items: center; }
@@ -17,30 +17,52 @@
     .divider:not(:empty)::before { margin-right: 10px; }
     .divider:not(:empty)::after { margin-left: 10px; }
 
-    /* DASHBOARD */
+    /* DASHBOARD HEADER */
     #dashboard { display: none; }
     header { background: #111; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .nav-tabs { display: flex; background: #222; overflow-x: auto; }
-    .tab { flex: 1; text-align: center; padding: 15px; color: #aaa; font-weight: bold; cursor: pointer; white-space: nowrap; transition: 0.3s; }
-    .tab.active { color: white; border-bottom: 3px solid #16a34a; background: #111; }
     
-    .container { padding: 20px; max-width: 800px; margin: auto; padding-bottom: 100px; }
+    /* MOBILE-FIRST APP NAVIGATION (Bottom Bar) */
+    .nav-tabs { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; border-top: 1px solid #eee; }
+    .tab { flex: 1; text-align: center; padding: 12px 5px; color: #888; font-weight: bold; font-size: 12px; cursor: pointer; border-top: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.2s; }
+    .tab.active { color: #16a34a; border-top: 3px solid #16a34a; background: #f0fdf4; }
+    
+    .container { padding: 15px; padding-bottom: 80px; max-width: 800px; margin: auto; }
     .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; }
     
+    /* PC DASHBOARD OVERRIDES */
+    @media (min-width: 768px) {
+        .nav-tabs { position: sticky; top: 58px; background: #222; box-shadow: none; border-top: none; flex-direction: row; }
+        .tab { font-size: 15px; padding: 15px; color: #aaa; border-top: none; border-bottom: 3px solid transparent; flex-direction: row; justify-content: center; }
+        .tab.active { color: white; border-bottom: 3px solid #16a34a; border-top: none; background: #111; }
+        .container { padding-bottom: 20px; margin-top: 20px; }
+    }
+
     /* ORDERS UI */
     .order-card { background: white; border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 15px; transition: 0.2s; }
     .order-card.pending { border-color: #ef4444; background: #fef2f2; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); animation: pulseAlert 2s infinite; }
     @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     
-    .status-btn { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 5px; font-size: 13px; }
-    .btn-accept { background: #16a34a; color: white; }
-    .btn-dispatch { background: #2563eb; color: white; }
-    .btn-reject { background: #dc2626; color: white; }
+    .status-btn { padding: 12px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 5px; font-size: 14px; display: inline-block; }
+    .btn-accept { background: #16a34a; color: white; width: 100%; margin-bottom: 8px; }
+    .btn-dispatch { background: #2563eb; color: white; width: 100%; }
+    .btn-reject { background: white; color: #dc2626; border: 1px solid #dc2626; width: 100%; }
+    
+    @media (min-width: 768px) {
+        .btn-accept, .btn-dispatch, .btn-reject { width: auto; }
+    }
 
     /* TOAST */
     #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-    .toast { background: #111; color: white; padding: 16px; border-radius: 12px; font-weight: bold; text-align: center; animation: toastFade 5s forwards; }
+    .toast { background: #111; color: white; padding: 16px; border-radius: 12px; font-weight: bold; text-align: center; animation: toastFade 5s forwards; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     @keyframes toastFade { 0% { opacity: 0; transform: translateY(-20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+
+    /* TOGGLE SWITCH */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #16a34a; }
+    input:checked + .slider:before { transform: translateX(22px); }
 </style>
 </head>
 <body>
@@ -54,11 +76,11 @@
 
         <div id="phoneAuthSection">
             <div style="display: flex; gap: 10px;">
-                <input type="text" value="+91" disabled style="width: 60px; background: #eee; text-align: center; font-weight: bold; color: #333;">
-                <input id="adminPhone" type="tel" placeholder="Admin Mobile No." style="flex: 1;" maxlength="10">
+                <input type="text" value="+91" disabled style="width: 60px; background: #eee; text-align: center; font-weight: bold; color: #333; margin-bottom: 0;">
+                <input id="adminPhone" type="tel" placeholder="Admin Mobile No." style="flex: 1; margin-bottom: 0;" maxlength="10">
             </div>
-            <div id="recaptcha-container"></div>
-            <button class="btn-primary" id="sendOtpBtn" onclick="sendAdminOTP()">Send Secure OTP</button>
+            <div id="recaptcha-container" style="margin-top: 10px;"></div>
+            <button class="btn-primary" id="sendOtpBtn" onclick="sendAdminOTP()" style="margin-top: 15px;">Send Secure OTP</button>
         </div>
 
         <div id="otpVerifySection" style="display: none;">
@@ -82,16 +104,28 @@
 <div id="dashboard">
     <header>
         <div>
-            <b style="font-size: 20px;">Admin Command Center</b>
+            <b style="font-size: 20px;">Command Center</b>
         </div>
-        <button onclick="logoutAdmin()" style="background: transparent; color: white; border: 1px solid white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Logout</button>
+        <button onclick="logoutAdmin()" style="background: transparent; color: white; border: 1px solid white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Logout</button>
     </header>
     
     <div class="nav-tabs">
-        <div class="tab active" onclick="switchTab('ordersTab', this)">📦 Live Orders <span id="pendingBadge" style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px; display:none;">New</span></div>
-        <div class="tab" onclick="switchTab('menuTab', this)">🍔 Menu & Stock</div>
-        <div class="tab" onclick="switchTab('notifyTab', this)">📢 Notifications</div>
-        <div class="tab" onclick="switchTab('settingsTab', this)">⚙️ Settings</div>
+        <div class="tab active" onclick="switchTab('ordersTab', this)">
+            <span style="font-size: 20px;">📦</span> 
+            <span>Orders <span id="pendingBadge" style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 2px; display:none;">New</span></span>
+        </div>
+        <div class="tab" onclick="switchTab('menuTab', this)">
+            <span style="font-size: 20px;">🍔</span> 
+            <span>Menu</span>
+        </div>
+        <div class="tab" onclick="switchTab('notifyTab', this)">
+            <span style="font-size: 20px;">📢</span> 
+            <span>Notify</span>
+        </div>
+        <div class="tab" onclick="switchTab('settingsTab', this)">
+            <span style="font-size: 20px;">⚙️</span> 
+            <span>Settings</span>
+        </div>
     </div>
 
     <div class="container">
@@ -103,26 +137,26 @@
 
         <div id="notifyTab" class="tab-content" style="display: none;">
             <div class="card">
-                <h2 style="margin-top: 0; color: #2563eb;">📢 Send Push Notification</h2>
-                <p style="color: #666; font-size: 14px;">Broadcast a message directly to your users' or drivers' phones.</p>
+                <h2 style="margin-top: 0; color: #2563eb;">Push Notification</h2>
+                <p style="color: #666; font-size: 14px;">Broadcast a message directly to users' phones.</p>
                 
                 <label style="font-weight: bold; margin-top: 10px; display: block;">Target Audience:</label>
-                <select id="notifyTarget" style="width: 100%; padding: 14px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px;">
+                <select id="notifyTarget">
                     <option value="all_users">All Customers</option>
                     <option value="all_drivers">All Delivery Partners</option>
                     <option value="specific">Specific Phone Number</option>
                 </select>
 
-                <input id="notifySpecificPhone" type="tel" placeholder="Enter Phone Number (e.g. 9876543210)" style="display:none;">
+                <input id="notifySpecificPhone" type="tel" placeholder="Enter Phone (e.g. 9876543210)" style="display:none;">
 
                 <label style="font-weight: bold; display: block;">Notification Title:</label>
                 <input id="notifyTitle" type="text" placeholder="e.g. 🌧️ Rainy Day Special!" maxlength="50">
 
                 <label style="font-weight: bold; display: block;">Notification Message:</label>
-                <textarea id="notifyMessage" rows="3" placeholder="e.g. Get 20% off all orders today. Order now!" style="width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; font-family: Arial; resize: vertical; box-sizing: border-box;"></textarea>
+                <textarea id="notifyMessage" rows="3" placeholder="e.g. Get 20% off all orders today. Order now!"></textarea>
 
                 <button class="btn-primary" style="background: #2563eb; font-size: 18px; padding: 16px;" onclick="sendCustomNotification()">🚀 Send Notification</button>
-                <div style="font-size: 12px; color: #888; margin-top: 10px; text-align: center;">Note: Sending notifications requires the Firebase Cloud Messaging backend script to be active.</div>
+                <div style="font-size: 12px; color: #888; margin-top: 10px; text-align: center;">Note: Sending requires Firebase Cloud Messaging backend active.</div>
             </div>
         </div>
 
@@ -133,7 +167,7 @@
                 <input id="itemPrice" type="number" placeholder="Price (₹)">
                 <input id="itemDesc" placeholder="Short Description">
                 <input id="itemStock" type="number" placeholder="Stock Available (e.g., 50)">
-                <input id="itemImage" placeholder="Image URL (or leave blank for placeholder)">
+                <input id="itemImage" placeholder="Image URL (or leave blank)">
                 <input id="editItemId" type="hidden">
                 <button class="btn-primary" onclick="saveItem()" id="saveItemBtn">Save Item</button>
                 <button onclick="clearForm()" style="width: 100%; background: #eee; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #333;">Clear</button>
@@ -147,30 +181,30 @@
                 <h2 style="margin-top:0; color:#dc2626;">Master Controls</h2>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-                    <b style="font-size: 16px;">Store Open Status</b>
+                    <b style="font-size: 16px;">Store is Open</b>
                     <label class="switch">
                         <input type="checkbox" id="storeOpenToggle" onchange="updateStoreSetting('isStoreOpen', this.checked)">
-                        <span style="font-size: 24px; cursor: pointer;">🔘</span>
+                        <span class="slider"></span>
                     </label>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee;">
-                    <b style="font-size: 16px;">Accept Cash on Delivery</b>
+                    <b style="font-size: 16px;">Accept COD</b>
                     <label class="switch">
                         <input type="checkbox" id="codToggle" onchange="updateStoreSetting('allowCOD', this.checked)">
-                        <span style="font-size: 24px; cursor: pointer;">🔘</span>
+                        <span class="slider"></span>
                     </label>
                 </div>
                 
                 <div style="padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
-                    <b style="font-size: 16px; display: block; margin-bottom: 10px;">Announcement Bar Text</b>
-                    <input id="announcementInput" placeholder="e.g. Use code WELCOME for 10% off!" style="margin-bottom: 10px;">
+                    <b style="font-size: 16px; display: block; margin-bottom: 10px;">Announcement Banner</b>
+                    <input id="announcementInput" placeholder="e.g. Use code WELCOME for 10% off!">
                     <button class="btn-primary" onclick="saveAnnouncement()">Update Banner</button>
                 </div>
             </div>
             
             <div class="card">
-                <h2 style="margin-top:0; color:#2563eb;">Payment Settings</h2>
+                <h2 style="margin-top:0; color:#2563eb;">Payment Info</h2>
                 <input id="vendorUpiId" placeholder="Your UPI ID (e.g. phone@upi)">
                 <input id="vendorQrUrl" placeholder="QR Code Image URL">
                 <button class="btn-primary" style="background:#2563eb;" onclick="savePaymentSettings()">Save Payment Info</button>
@@ -186,7 +220,7 @@
 
 <script>
 // ==========================================
-// CONFIGURATION
+// CONFIGURATION (product-app01)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyBSfrLwVh9m8RIcTJDURvEnX1VOeeiSJ_A",
@@ -205,9 +239,9 @@ auth.useDeviceLanguage();
 // ==========================================
 // SECURITY & ALARM GLOBALS
 // ==========================================
+// ONLY this phone number can log in
 const ALLOWED_ADMIN_PHONE = "+919642530876"; 
-// Note: If you want to allow an email too, you can set it here:
-const ALLOWED_ADMIN_EMAIL = "admin@quickdelivery.com"; 
+const ALLOWED_ADMIN_EMAIL = "m.yaswanthreddy@gmail.com"; 
 
 // Create the loud, persistent alarm audio
 let sirenAudio = new Audio("https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg");
@@ -246,7 +280,7 @@ function sendAdminOTP() {
     
     let formatted = "+91" + num;
     
-    // FIRST SECURITY CHECK: Don't even send SMS if it's not the authorized number
+    // FIRST SECURITY CHECK: Whitelist Validation
     if(formatted !== ALLOWED_ADMIN_PHONE) {
         showToast("⛔ Unauthorized Admin Number.");
         return;
@@ -296,17 +330,15 @@ function logoutAdmin() {
 // SECURITY GATEWAY LISTENER
 auth.onAuthStateChanged(user => {
     if (user) {
-        // Verify identity
-        if (user.phoneNumber === ALLOWED_ADMIN_PHONE || user.email === ALLOWED_ADMIN_EMAIL || user.email === "m.yaswanthreddy@gmail.com") {
-            // AUTHORIZED
+        // Verify identity securely
+        if (user.phoneNumber === ALLOWED_ADMIN_PHONE || user.email === ALLOWED_ADMIN_EMAIL) {
             document.getElementById('loginScreen').style.display = "none";
             document.getElementById('dashboard').style.display = "block";
             showToast("✅ Welcome Commander");
             startAdminSystems();
         } else {
-            // UNAUTHORIZED
             auth.signOut();
-            showToast("⛔ Access Denied. You are not an authorized admin.");
+            showToast("⛔ Access Denied. You are not authorized.");
         }
     } else {
         document.getElementById('loginScreen').style.display = "flex";
@@ -328,13 +360,11 @@ function startAdminSystems() {
 }
 
 function triggerAlarm() {
-    // Attempt to play sound (Browsers require user interaction first, but since they clicked login, it will work!)
     sirenAudio.play().catch(e => console.log("Alarm blocked by browser"));
     
-    // Start continuous vibration for native Android devices
     if(navigator.vibrate && !vibrationInterval) {
         vibrationInterval = setInterval(() => {
-            navigator.vibrate([1000, 500, 1000, 500]); // Vibrate 1s, pause 0.5s, vibrate 1s
+            navigator.vibrate([1000, 500, 1000, 500]); // Vibrate pattern
         }, 3000);
     }
 }
@@ -346,7 +376,7 @@ function stopAlarm() {
         clearInterval(vibrationInterval);
         vibrationInterval = null;
     }
-    if(navigator.vibrate) navigator.vibrate(0); // Cancel vibration immediately
+    if(navigator.vibrate) navigator.vibrate(0); 
 }
 
 function listenToOrdersAndAlarms() {
@@ -359,15 +389,14 @@ function listenToOrdersAndAlarms() {
             let id = doc.id;
             let displayId = o.orderNumber ? o.orderNumber : id.slice(0,6).toUpperCase();
             
-            // Check if there is an untouched order triggering the alarm
             if(o.status === "pending") {
                 hasNewPendingOrders = true;
             }
 
             let d = o.createdAt ? o.createdAt.toDate().toLocaleString() : "Just now";
-            let itemsHTML = o.items.map(i => `<b>${i.qty}x</b> ${i.name}`).join(", ");
-            let locLink = o.deliveryLocation ? `<a href="https://maps.google.com/?q=${o.deliveryLocation.lat},${o.deliveryLocation.lng}" target="_blank" style="color:#2563eb; font-weight:bold;">📍 Open in GPS Map</a><br>` : "";
-            let ssLink = o.paymentScreenshot ? `<br><a href="${o.paymentScreenshot}" target="_blank" style="color:#16a34a; font-weight:bold;">📸 View Payment Screenshot</a>` : "";
+            let itemsHTML = o.items.map(i => `<b>${i.qty}x</b> ${i.name}`).join("<br>");
+            let locLink = o.deliveryLocation ? `<a href="http://googleusercontent.com/maps.google.com/?q=${o.deliveryLocation.lat},${o.deliveryLocation.lng}" target="_blank" style="color:#2563eb; font-weight:bold; display:inline-block; margin-top:5px;">📍 Open in GPS Map</a><br>` : "";
+            let ssLink = o.paymentScreenshot ? `<a href="${o.paymentScreenshot}" target="_blank" style="color:#16a34a; font-weight:bold; display:inline-block; margin-top:5px;">📸 View Payment Screenshot</a>` : "";
 
             let buttons = "";
             let cardClass = "order-card";
@@ -384,36 +413,35 @@ function listenToOrdersAndAlarms() {
 
             ordersHTML += `
             <div class="${cardClass}">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
                     <b style="font-size:18px;">Order #${displayId}</b>
                     <span style="font-weight:bold; text-transform:uppercase; color:#666;">[${o.status}]</span>
                 </div>
-                <div style="font-size:14px; margin-bottom:10px;">
-                    <b>Customer:</b> ${o.userName} (${o.userPhone})<br>
+                <div style="font-size:14px; margin-bottom:10px; color: #444; line-height: 1.4;">
+                    <b>Name:</b> ${o.userName}<br>
+                    <b>Phone:</b> <a href="tel:${o.userPhone}" style="color:#2563eb; font-weight:bold;">${o.userPhone}</a><br>
                     <b>Address:</b> ${o.address}<br>
                     ${locLink}
                     <b>Time:</b> ${d}<br>
-                    <b>Payment:</b> ${o.payment} ${ssLink}
+                    <b>Payment:</b> ${o.payment} <br>${ssLink}
                 </div>
-                <div style="background:#f9f9f9; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #eee;">
+                <div style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #eee; font-size:14px;">
                     ${itemsHTML}
                 </div>
-                <div style="font-size:18px; font-weight:bold; margin-bottom:15px;">Total: ₹${o.total}</div>
+                <div style="font-size:20px; font-weight:bold; margin-bottom:15px; text-align:right;">Total: ₹${o.total}</div>
                 <div>${buttons}</div>
             </div>`;
         });
 
-        document.getElementById('ordersList').innerHTML = ordersHTML || "No orders yet.";
+        document.getElementById('ordersList').innerHTML = ordersHTML || "<p style='text-align:center; color:#888; margin-top:40px;'>No orders yet.</p>";
 
         // ALARM LOGIC
         if(hasNewPendingOrders) {
             document.getElementById('pendingBadge').style.display = "inline-block";
-            if(!isFirstLoad) {
-                triggerAlarm(); // Only play loud alarm for newly arrived orders while app is open
-            }
+            if(!isFirstLoad) { triggerAlarm(); }
         } else {
             document.getElementById('pendingBadge').style.display = "none";
-            stopAlarm(); // Silence! Admin clicked accept or reject
+            stopAlarm(); 
         }
         
         isFirstLoad = false;
@@ -423,12 +451,11 @@ function listenToOrdersAndAlarms() {
 function updateStatus(id, newStatus) {
     db.collection("orders").doc(id).update({ status: newStatus }).then(() => {
         showToast("✅ Status updated to: " + newStatus);
-        // The snapshot listener will automatically stop the alarm if pending orders reach 0!
     });
 }
 
 // ==========================================
-// NOTIFICATIONS SENDER (NEW)
+// NOTIFICATIONS SENDER
 // ==========================================
 document.getElementById('notifyTarget').addEventListener('change', function() {
     if(this.value === 'specific') {
@@ -444,18 +471,9 @@ function sendCustomNotification() {
     const title = document.getElementById('notifyTitle').value.trim();
     const message = document.getElementById('notifyMessage').value.trim();
 
-    if(!title || !message) {
-        showToast("⚠️ Please enter a Title and Message.");
-        return;
-    }
+    if(!title || !message) { showToast("⚠️ Please enter a Title and Message."); return; }
+    if(target === 'specific' && phone.length !== 10) { showToast("⚠️ Enter a valid 10-digit customer/driver phone number."); return; }
 
-    if(target === 'specific' && phone.length !== 10) {
-        showToast("⚠️ Enter a valid 10-digit customer/driver phone number.");
-        return;
-    }
-
-    // Since FCM sending directly from client is blocked by Google, 
-    // we write the request to the Database. A Cloud Function will trigger from this.
     db.collection("notification_requests").add({
         target: target,
         phoneTarget: target === 'specific' ? "+91" + phone : null,
@@ -564,11 +582,19 @@ function loadMenu() {
         snap.forEach(doc => {
             let i = doc.data();
             let safeDesc = i.description ? i.description.replace(/'/g, "\\'") : '';
-            h += `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><b>${i.name}</b> - ₹${i.price} <div style="font-size:12px; color:#888;">Stock: ${i.stock !== null && i.stock !== undefined ? i.stock : 'Unlimited'}</div></div>
-                    <div>
-                        <button style="background:#2563eb; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;" onclick="editItem('${doc.id}', '${i.name.replace(/'/g, "\\'")}', ${i.price}, '${safeDesc}', '${i.stock}', '${i.image}')">Edit</button>
-                        <button style="background:#dc2626; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;" onclick="deleteItem('${doc.id}')">Delete</button>
+            h += `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;">
+                        <div>
+                            <b style="font-size:16px;">${i.name}</b><br>
+                            <span style="color:#16a34a; font-weight:bold;">₹${i.price}</span>
+                        </div>
+                        <div style="font-size:13px; color:#888; background:#f4f4f5; padding:4px 8px; border-radius:4px;">
+                            Stock: ${i.stock !== null && i.stock !== undefined ? i.stock : 'Unlimited'}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button style="flex:1; background:#2563eb; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="editItem('${doc.id}', '${i.name.replace(/'/g, "\\'")}', ${i.price}, '${safeDesc}', '${i.stock}', '${i.image}')">Edit</button>
+                        <button style="flex:1; background:white; color:#dc2626; border:1px solid #dc2626; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="deleteItem('${doc.id}')">Delete</button>
                     </div>
                   </div>`;
         });
